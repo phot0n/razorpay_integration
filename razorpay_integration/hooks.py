@@ -66,7 +66,9 @@ app_license = "MIT"
 # ------------
 
 # before_install = "razorpay_integration.install.before_install"
-# after_install = "razorpay_integration.install.after_install"
+after_install = "razorpay_integration.utils.add_razorpay_section_in_web_form"
+
+before_uninstall = "razorpay_integration.utils.remove_razorpay_section_from_web_form"
 
 # Desk Notifications
 # ------------------
