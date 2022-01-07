@@ -1,5 +1,7 @@
+# frappe imports
 import frappe
 
+# third party imports
 import hmac
 import razorpay
 import requests
@@ -8,11 +10,12 @@ from functools import partial
 from typing import Callable
 from uuid import uuid4
 
+
 '''
 TODO:
 	- payment links
 	- subscriptions
-	-
+	- refunds
 
 Flow:
 	- Everthing starts with a payment link
@@ -21,7 +24,9 @@ Flow:
 For every payment link created we get an order id and payment link id
 When the payment is made successfully on the payment link, we get the payment id
 
-NOTE: Razorpay's wrapper library doesn't have the implementation for payment link in v1.2.0
+NOTE: Razorpay's wrapper library doesn't have the implementation for:
+	- payment link (in v1.2.0)
+	- fetching all customers (not even in master)
 '''
 
 
@@ -29,8 +34,24 @@ class RazorpayPayment:
 	def __init__(self, api_key: str, api_secret: str):
 		self.api_key = api_key
 		self.api_secret = api_secret
-		self.rzp_client = razorpay.Client(auth=(api_key, api_secret))
 		self.base_api_url = "https://api.razorpay.com/v1/"
+		self.validate_razorpay_creds()
+
+		# only initialize razorpay's client if the validation succeeds
+		self.rzp_client = razorpay.Client(auth=(api_key, api_secret))
+
+
+	def validate_razorpay_creds(self):
+		return handle_api_response(
+			partial(
+				requests.get,
+				self.base_api_url + "customers?count=1",
+				auth=(self.api_key, self.api_secret),
+				headers={
+					"content-type": "application/json"
+				}
+			)
+		)
 
 
 	def _create_payment_link(self, **kwargs):
@@ -75,9 +96,9 @@ class RazorpayPayment:
 					"callback_method": "get" if kwargs.get("callback_url") else "",
 					"currency": "INR",
 					"customer": {
-						"name": kwargs.get("buyer_name", ""),
-						"email": kwargs.get("buyer_email", ""),
-						"phone": kwargs.get("buyer_phone", "")
+						"name": kwargs.get("payer_name", ""),
+						"email": kwargs.get("payer_email", ""),
+						"phone": kwargs.get("payer_phone", "")
 					},
 					"description": kwargs.get("description", ""),
 					"expire_by": kwargs.get("expire_by", 0),
@@ -180,6 +201,7 @@ class RazorpayPayment:
 		return True
 
 
+
 def handle_api_response(_func: Callable):
 	if not callable(_func):
 		return
@@ -198,10 +220,13 @@ def handle_api_response(_func: Callable):
 
 		# to get api's errors
 		if response.get("error"):
-			frappe.log_error(response.get("error"))
+			frappe.log_error(response["error"])
 			frappe.throw(
-				frappe._(response.get("error").get("description")),
-				title=frappe._(response.get("error").get("code"))
+				frappe._(
+					response["error"].get("code") +
+					": " +
+					response["error"].get("description")
+				)
 			)
 
 	return response
