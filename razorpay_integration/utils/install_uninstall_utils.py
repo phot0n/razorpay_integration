@@ -1,8 +1,7 @@
 import frappe
-from frappe.utils.data import flt
 
 def add_razorpay_section_in_web_form() -> None:
-	# Installs a section for Razorpay in Web Form  DocType
+	# Installs a section for Razorpay in Web Form DocType
 
 	web_form_doctype = frappe.get_doc("DocType","Web Form")
 	web_form_doctype.extend("fields", [
@@ -28,7 +27,6 @@ def add_razorpay_section_in_web_form() -> None:
 		{
 			"label": "Amount",
 			"fieldtype": "Currency",
-			"default": flt(1),
 			"fieldname": "razorpay_amount",
 			"depends_on": "eval:doc.accept_razorpay && !doc.accept_razorpay_amount_field",
 		},
@@ -72,6 +70,8 @@ def add_razorpay_section_in_web_form() -> None:
 
 
 def remove_razorpay_section_from_web_form() -> None:
+	# Removes Razorpay section from Web Form DocType
+
 	web_form_doctype = frappe.get_doc("DocType","Web Form")
 	razorpay_fieldnames = (
 		"sb_razorpay",

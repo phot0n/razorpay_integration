@@ -5,6 +5,7 @@
 import frappe
 from frappe.integrations.utils import create_payment_gateway
 from frappe.model.document import Document
+from frappe.utils.password import get_decrypted_password
 
 # third party imports
 import json
@@ -35,7 +36,7 @@ class RazorpaySettings(Document):
 
 		razorpay_response = RazorpayPayment(
 			self.api_key,
-			self.api_secret
+			get_decrypted_password("Razorpay Settings", self.name, fieldname="api_secret")
 		).get_or_create_payment_link(**kwargs)
 
 		# log details in razorpay log
