@@ -2,13 +2,14 @@
  "actions": [],
  "allow_rename": 1,
  "autoname": "format:rzp-setting-{#####}",
- "creation": "2021-12-07 13:59:26.266978",
+ "creation": "2022-01-05 15:55:28.602977",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
   "api_key",
-  "api_secret"
+  "api_secret",
+  "create_payment_gateway"
  ],
  "fields": [
   {
@@ -24,11 +25,17 @@
    "in_list_view": 1,
    "label": "API Secret",
    "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "create_payment_gateway",
+   "fieldtype": "Check",
+   "label": "Create Payment Gateway"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-12-07 13:59:26.266978",
+ "modified": "2022-01-07 15:19:32.545721",
  "modified_by": "Administrator",
  "module": "Razorpay Integration",
  "name": "Razorpay Settings",
@@ -50,5 +57,6 @@
  ],
  "quick_entry": 1,
  "sort_field": "modified",
- "sort_order": "DESC"
+ "sort_order": "DESC",
+ "states": []
 }

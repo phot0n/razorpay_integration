@@ -16,6 +16,7 @@ TODO:
 	- payment links
 	- subscriptions
 	- refunds
+	- receipt
 
 Flow:
 	- Everthing starts with a payment link
@@ -85,8 +86,9 @@ class RazorpayPayment:
 				frappe._("Amount (INT) is required for creating a payment link !")
 			)
 
-		# convert rupee to paise
 		# razorpay takes amount precision upto 2 places
+		# and needs it to be specified as an int and the api
+		# automatically determines the conversion
 		kwargs["amount"] *= 100
 
 		return handle_api_response(

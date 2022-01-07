@@ -20,11 +20,13 @@ class RazorpaySettings(Document):
 	'''
 	def validate(self):
 		RazorpayPayment(self.api_key, self.api_secret)
-		create_payment_gateway(
-			self.name,
-			settings="Razorpay Settings",
-			controller=self.name
-		)
+
+		if self.create_payment_gateway:
+			create_payment_gateway(
+				self.name,
+				settings="Razorpay Settings",
+				controller=self.name
+			)
 
 
 	def get_payment_url(self, **kwargs):
