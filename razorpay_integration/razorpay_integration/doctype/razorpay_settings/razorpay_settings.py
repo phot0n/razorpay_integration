@@ -53,7 +53,7 @@ class RazorpaySettings(Document):
 			reference_docname=kwargs.get("reference_docname"),
 			description=razorpay_response.get("description"),
 			currency=razorpay_response.get("currency"),
-			amount=flt(razorpay_response.get("amount") / 100), # razorpay returns the amount as sent to it
+			amount=flt(razorpay_response.get("amount") / 100), # razorpay returns the amount as it's sent to it
 			payment_link_id=razorpay_response.get("id"),
 			payment_url=razorpay_response.get("short_url"),
 			valid_till=razorpay_response.get("expire_by"),

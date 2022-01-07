@@ -6,6 +6,7 @@ import hmac
 import razorpay
 import requests
 import hashlib
+from collections import namedtuple
 from functools import partial
 from typing import Callable
 from uuid import uuid4
@@ -29,11 +30,12 @@ NOTE: Razorpay's wrapper library doesn't have the implementation for:
 	- fetching all customers (not even in master)
 '''
 
+Auth = namedtuple("Auth", ["api_key", "api_secret"])
+
 
 class RazorpayPayment:
 	def __init__(self, api_key: str, api_secret: str):
-		self.api_key = api_key
-		self.api_secret = api_secret
+		self.auth = Auth(api_key, api_secret)
 		self.base_api_url = "https://api.razorpay.com/v1/"
 		self.validate_razorpay_creds()
 
@@ -46,7 +48,7 @@ class RazorpayPayment:
 			partial(
 				requests.get,
 				self.base_api_url + "customers?count=1",
-				auth=(self.api_key, self.api_secret),
+				auth=tuple(self.auth),
 				headers={
 					"content-type": "application/json"
 				}
@@ -93,8 +95,8 @@ class RazorpayPayment:
 		return handle_api_response(
 			partial(
 				requests.post,
-				self.base_api_url + f"{kwargs.get('api_endpoint')}",
-				auth=(self.api_key, self.api_secret),
+				self.base_api_url + kwargs.get('api_endpoint'),
+				auth=tuple(self.auth),
 				json={
 					"amount": kwargs["amount"],
 					"callback_url": kwargs.get("callback_url", ""),
@@ -134,7 +136,7 @@ class RazorpayPayment:
 				partial(
 					requests.get,
 					self.base_api_url + f"{api_endpoint}/{payment_link_id}",
-					auth=(self.api_key, self.api_secret),
+					auth=tuple(self.auth),
 					headers={
 						"content-type": "application/json"
 					}
@@ -159,7 +161,7 @@ class RazorpayPayment:
 		)
 
 
-	def refund_payment(self, payment_id: str, refund_amt: int):
+	def refund_payment(self, payment_id: str, refund_amt: int=0):
 		# NOTE: Refund amount should be less than/equal to the payment amount
 		if not payment_id:
 			frappe.throw(
@@ -172,6 +174,7 @@ class RazorpayPayment:
 			# refund is done in full by default
 			_func = partial(self.rzp_client.payment.refund, payment_id)
 		else:
+			refund_amt *= 100
 			_func = partial(self.rzp_client.payment.refund, payment_id, refund_amt)
 
 		return handle_api_response(_func)
@@ -189,7 +192,7 @@ class RazorpayPayment:
 		message = razorpay_payment_link_id + "|" + \
 			razorpay_payment_link_reference_id + "|" + \
 			razorpay_payment_link_status + "|" + razorpay_payment_id
-		secret = bytes(self.api_secret, "utf-8")
+		secret = bytes(self.auth.api_secret, "utf-8")
 		msg = bytes(message, "utf-8")
 
 		if not hmac.compare_digest(
