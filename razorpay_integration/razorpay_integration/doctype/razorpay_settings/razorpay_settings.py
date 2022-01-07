@@ -3,7 +3,7 @@
 
 # frappe imports
 import frappe
-from frappe.integrations.utils import make_get_request
+from frappe.integrations.utils import create_payment_gateway
 from frappe.model.document import Document
 
 # third party imports
@@ -20,6 +20,12 @@ class RazorpaySettings(Document):
 	'''
 	def validate(self):
 		RazorpayPayment(self.api_key, self.api_secret)
+		create_payment_gateway(
+			self.name,
+			settings="Razorpay Settings",
+			controller=self.name
+		)
+
 
 	def get_payment_url(self, **kwargs):
 		kwargs["reference_id"] = kwargs.pop("order_id")
