@@ -2,10 +2,12 @@
 import frappe
 
 # third party imports
-import hmac
 import razorpay
-import requests
+
+# standard imports
+import hmac
 import hashlib
+import requests
 from collections import namedtuple
 from functools import partial
 from typing import Callable

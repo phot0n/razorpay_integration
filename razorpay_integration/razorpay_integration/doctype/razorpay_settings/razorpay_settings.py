@@ -8,7 +8,7 @@ from frappe.model.document import Document
 from frappe.utils.data import flt
 from frappe.utils.password import get_decrypted_password
 
-# third party imports
+# standard imports
 import json
 
 # api imports
