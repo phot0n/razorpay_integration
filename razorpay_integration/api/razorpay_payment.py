@@ -85,13 +85,17 @@ class RazorpayPayment:
 				frappe._("Amount (INT) is required for creating a payment link !")
 			)
 
+		# convert rupee to paise
+		# razorpay takes amount precision upto 2 places
+		kwargs["amount"] *= 100
+
 		return handle_api_response(
 			partial(
 				requests.post,
 				self.base_api_url + f"{kwargs.get('api_endpoint')}",
 				auth=(self.api_key, self.api_secret),
 				json={
-					"amount": kwargs.get("amount"),
+					"amount": kwargs["amount"],
 					"callback_url": kwargs.get("callback_url", ""),
 					"callback_method": "get" if kwargs.get("callback_url") else "",
 					"currency": "INR",

@@ -36,8 +36,6 @@ class RazorpaySettings(Document):
 			self.api_secret
 		).get_or_create_payment_link(**kwargs)
 
-		# TODO: normalize amount
-
 		# log details in razorpay log
 		frappe.get_doc(
 			doctype="Razorpay Payment Log",
