@@ -5,6 +5,7 @@
 import frappe
 from frappe.integrations.utils import create_payment_gateway
 from frappe.model.document import Document
+from frappe.utils.data import flt
 from frappe.utils.password import get_decrypted_password
 
 # third party imports
@@ -31,8 +32,12 @@ class RazorpaySettings(Document):
 
 
 	def get_payment_url(self, **kwargs):
-		kwargs["reference_id"] = kwargs.pop("order_id")
-		kwargs["callback_url"] = kwargs.pop("redirect_to")
+		if kwargs.get("order_id"):
+			kwargs["reference_id"] = kwargs.pop("order_id")
+		kwargs["callback_url"] = kwargs.pop(
+			"redirect_to",
+			frappe.utils.get_url("razorpay_payment_status")
+		)
 
 		razorpay_response = RazorpayPayment(
 			self.api_key,
@@ -48,7 +53,7 @@ class RazorpaySettings(Document):
 			reference_docname=kwargs.get("reference_docname"),
 			description=razorpay_response.get("description"),
 			currency=razorpay_response.get("currency"),
-			amount=razorpay_response.get("amount"),
+			amount=flt(razorpay_response.get("amount") / 100), # razorpay returns the amount as sent to it
 			payment_link_id=razorpay_response.get("id"),
 			payment_url=razorpay_response.get("short_url"),
 			valid_till=razorpay_response.get("expire_by"),

@@ -16,7 +16,6 @@ TODO:
 	- payment links
 	- subscriptions
 	- refunds
-	- receipt
 
 Flow:
 	- Everthing starts with a payment link
@@ -86,8 +85,8 @@ class RazorpayPayment:
 				frappe._("Amount (INT) is required for creating a payment link !")
 			)
 
-		# razorpay takes amount precision upto 2 places
-		# and needs it to be specified as an int and the api
+		# razorpay assumes amount precision upto 2 places
+		# and needs it to be specified as a whole (int) and the api
 		# automatically determines the conversion
 		kwargs["amount"] *= 100
 
@@ -230,7 +229,7 @@ def handle_api_response(_func: Callable):
 			frappe.throw(
 				frappe._(
 					response["error"].get("code") +
-					": " +
+					"- " +
 					response["error"].get("description")
 				)
 			)
