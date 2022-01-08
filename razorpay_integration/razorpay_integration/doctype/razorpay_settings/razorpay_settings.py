@@ -34,10 +34,10 @@ class RazorpaySettings(Document):
 	def get_payment_url(self, **kwargs):
 		if kwargs.get("order_id"):
 			kwargs["reference_id"] = kwargs.pop("order_id")
-		kwargs["callback_url"] = kwargs.pop(
-			"redirect_to",
-			frappe.utils.get_url("razorpay_payment_status")
-		)
+		# TODO: override webform redirection with razorpay's one
+		# we can put the web form redirection in "notes" in
+		# razorpay's api or maybe the payload section in log doctype
+		kwargs["callback_url"] = kwargs.pop("redirect_to")
 
 		razorpay_response = RazorpayPayment(
 			self.api_key,

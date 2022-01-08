@@ -10,7 +10,7 @@ import hashlib
 import requests
 from collections import namedtuple
 from functools import partial
-from typing import Callable
+from typing import Callable, Dict
 from uuid import uuid4
 
 
@@ -58,65 +58,62 @@ class RazorpayPayment:
 		)
 
 
-	def _create_payment_link(self, **kwargs):
-		# ref: https://razorpay.com/docs/api/payment-links/#create-payment-link
+	def _create_payment_link(
+		self,
+		amount: int,
+		api_endpoint: str,
+		*,
+		callback_url: str="",
+		description: str="",
+		expire_by: int=0,
+		payer_email: str="",
+		payer_phone: str="",
+		payer_name: str="",
+		reference_id: str="",
+		notify_via_email: bool=False,
+		notify_via_sms: bool=False,
+		notes: Dict[str, str]={}, # kept "Dict" for python < v3.9 (ref: https://docs.python.org/3/library/typing.html#typing.Dict)
+		**kwargs
+	):
 		'''
-		Request params for creating payment link:
-			- amount (required) INT
-			- currency STRING
-			- description STRING : A brief description of the Payment Link. (max 2048 characters)
-			- reference_id STRING : Reference number tagged to a Payment Link. Must be a unique number for each Payment Link. (max 40 characters)
-			- reminder_enable BOOLEAN : Used to send reminders for the Payment Link.
-			- customer JSON_OBJ
-				- name STRING
-				- email STRING
-				- phone STRING
-			- expire_by INT : Timestamp, in Unix, at which the Payment Link will expire (default is 6 months from creation)
-			- notify JSON_OBJ
-				- sms BOOLEAN : Razorpay will handle the notification
-				- email BOOLEAN : Razorpay will handle the notification
-			- callback_url STRING : Adds a redirect URL to the Payment Link. Once customers completes the payment, they are redirected to the specified URL.
-				- ref: https://razorpay.com/docs/api/payment-links/#using-callback_url-parameter
-			- callback_method (required if `callback_url` is provided) STRING
-			- upi_link BOOLEAN : For creating UPI Payment Link
+		ref: https://razorpay.com/docs/api/payment-links/#create-payment-link
 
 		Further customizations:
 			- ref: https://razorpay.com/docs/api/payment-links/customise/
 		'''
 
-		if not kwargs.get("amount"):
+		if not amount or amount < 1:
 			frappe.throw(
 				frappe._("Amount (INT) is required for creating a payment link !")
 			)
 
 		# razorpay assumes amount precision upto 2 places
-		# and needs it to be specified as a whole (int) and the api
-		# automatically determines the conversion
-		kwargs["amount"] *= 100
+		# and needs it to be specified as a whole (int)
+		amount *= 100
 
 		return handle_api_response(
 			partial(
 				requests.post,
-				self.base_api_url + kwargs.get('api_endpoint'),
+				self.base_api_url + api_endpoint,
 				auth=tuple(self.auth),
 				json={
-					"amount": kwargs["amount"],
-					"callback_url": kwargs.get("callback_url", ""),
-					"callback_method": "get" if kwargs.get("callback_url") else "",
+					"amount": amount,
+					"callback_url": callback_url or frappe.utils.get_url("razorpay_payment_status"),
+					"callback_method": "get",
 					"currency": "INR",
 					"customer": {
-						"name": kwargs.get("payer_name", ""),
-						"email": kwargs.get("payer_email", ""),
-						"phone": kwargs.get("payer_phone", "")
+						"name": payer_name,
+						"email": payer_email,
+						"phone": payer_phone
 					},
-					"description": kwargs.get("description", ""),
-					"expire_by": kwargs.get("expire_by", 0),
+					"description": description,
+					"expire_by": expire_by,
 					"notify": {
-						"sms": kwargs.get("notify_via_sms", False),
-						"email": kwargs.get("notify_via_email", False)
+						"sms": notify_via_sms,
+						"email": notify_via_email
 					},
-					"reference_id": kwargs.get("reference_id", str(uuid4())), # use this ref id in razorpay log
-					"reminder_enable": kwargs.get("reminder_enable", False)
+					"reference_id": reference_id or str(uuid4()), # use this ref id in razorpay log
+					"notes": notes # anything can be put in this as a key value pair
 				},
 				headers={
 					"Content-type": "application/json"
@@ -128,16 +125,17 @@ class RazorpayPayment:
 	def get_or_create_payment_link(
 		self,
 		payment_link_id: str="",
-		api_endpoint: str="payment_links",
 		**kwargs
 	):
+		api_endpoint = "payment_links"
 
 		if payment_link_id:
 			#ref: https://razorpay.com/docs/api/payment-links/#specific-payment-links-by-id
+
 			return handle_api_response(
 				partial(
 					requests.get,
-					self.base_api_url + f"{api_endpoint}/{payment_link_id}",
+					f"{self.base_api_url}/{api_endpoint}/{payment_link_id}",
 					auth=tuple(self.auth),
 					headers={
 						"content-type": "application/json"
@@ -145,8 +143,7 @@ class RazorpayPayment:
 				)
 			)
 
-		kwargs.update(dict(api_endpoint=api_endpoint))
-		return self._create_payment_link(**kwargs)
+		return self._create_payment_link(api_endpoint=api_endpoint, **kwargs)
 
 
 	def get_payment(self, payment_id: str):
@@ -184,6 +181,7 @@ class RazorpayPayment:
 
 	def verify_payment_signature(
 		self,
+		*,
 		razorpay_payment_link_id: str,
 		razorpay_payment_link_reference_id: str,
 		razorpay_payment_link_status: str,
@@ -193,7 +191,9 @@ class RazorpayPayment:
 	):
 		message = razorpay_payment_link_id + "|" + \
 			razorpay_payment_link_reference_id + "|" + \
-			razorpay_payment_link_status + "|" + razorpay_payment_id
+			razorpay_payment_link_status + "|" + \
+			razorpay_payment_id
+
 		secret = bytes(self.auth.api_secret, "utf-8")
 		msg = bytes(message, "utf-8")
 
@@ -201,9 +201,10 @@ class RazorpayPayment:
 			hmac.new(key=secret, msg=msg, digestmod=hashlib.sha256).hexdigest(),
 			razorpay_signature
 		):
+			# if this fails we can say the payment failed
 			if raise_err:
 				frappe.throw(
-					frappe._("Razorpay Signature Verification Failed")
+					frappe._("Razorpay Payment Signature Verification Failed")
 				)
 
 			return False
