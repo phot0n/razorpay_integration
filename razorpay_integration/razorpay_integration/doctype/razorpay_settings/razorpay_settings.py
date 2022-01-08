@@ -35,6 +35,9 @@ class RazorpaySettings(Document):
 		if kwargs.get("order_id"):
 			kwargs["reference_id"] = kwargs.pop("order_id")
 
+		if kwargs.get("payer_email") == "Guest":
+			del kwargs["payer_email"]
+
 		razorpay_response = RazorpayPayment(
 			self.api_key,
 			get_decrypted_password("Razorpay Settings", self.name, fieldname="api_secret")

@@ -8,7 +8,6 @@ import razorpay
 import hmac
 import hashlib
 import requests
-from collections import namedtuple
 from functools import partial
 from typing import Callable, Dict
 from uuid import uuid4
@@ -32,13 +31,12 @@ NOTE: Razorpay's wrapper library doesn't have the implementation for:
 	- fetching all customers (not even in master)
 '''
 
-Auth = namedtuple("Auth", ["api_key", "api_secret"])
+BASE_API_URL = "https://api.razorpay.com/v1/"
 
 
 class RazorpayPayment:
 	def __init__(self, api_key: str, api_secret: str):
-		self.auth = Auth(api_key, api_secret)
-		self.base_api_url = "https://api.razorpay.com/v1/"
+		self.auth = (api_key, api_secret)
 		self.validate_razorpay_creds()
 
 		# only initialize razorpay's client if the validation succeeds
@@ -49,8 +47,8 @@ class RazorpayPayment:
 		return handle_api_response(
 			partial(
 				requests.get,
-				self.base_api_url + "customers?count=1",
-				auth=tuple(self.auth),
+				BASE_API_URL + "customers?count=1",
+				auth=self.auth,
 				headers={
 					"content-type": "application/json"
 				}
@@ -61,6 +59,7 @@ class RazorpayPayment:
 	def _create_payment_link(
 		self,
 		amount: int,
+		payer_name: str,
 		api_endpoint: str,
 		*,
 		callback_url: str="",
@@ -68,11 +67,10 @@ class RazorpayPayment:
 		expire_by: int=0,
 		payer_email: str="",
 		payer_phone: str="",
-		payer_name: str="",
 		reference_id: str="",
 		notify_via_email: bool=False,
 		notify_via_sms: bool=False,
-		notes: Dict[str, str]={}, # kept "Dict" for python < v3.9 (ref: https://docs.python.org/3/library/typing.html#typing.Dict)
+		notes: Dict={}, # kept "Dict" for python < v3.9 (ref: https://docs.python.org/3/library/typing.html#typing.Dict)
 		**kwargs
 	):
 		'''
@@ -82,9 +80,14 @@ class RazorpayPayment:
 			- ref: https://razorpay.com/docs/api/payment-links/customise/
 		'''
 
-		if not amount or amount < 1:
+		if amount < 1:
 			frappe.throw(
-				frappe._("Amount (INT) is required for creating a payment link !")
+				frappe._("Sufficient amount not provided to start a transaction !")
+			)
+
+		if not payer_name:
+			frappe.throw(
+				frappe._("Customer's name is required!")
 			)
 
 		# razorpay assumes amount precision upto 2 places
@@ -94,8 +97,8 @@ class RazorpayPayment:
 		return handle_api_response(
 			partial(
 				requests.post,
-				self.base_api_url + api_endpoint,
-				auth=tuple(self.auth),
+				BASE_API_URL + api_endpoint,
+				auth=self.auth,
 				json={
 					"amount": amount,
 					"callback_url": callback_url or frappe.utils.get_url("razorpay_payment_status"),
@@ -135,8 +138,8 @@ class RazorpayPayment:
 			return handle_api_response(
 				partial(
 					requests.get,
-					f"{self.base_api_url}/{api_endpoint}/{payment_link_id}",
-					auth=tuple(self.auth),
+					f"{BASE_API_URL}/{api_endpoint}/{payment_link_id}",
+					auth=self.auth,
 					headers={
 						"content-type": "application/json"
 					}
@@ -234,8 +237,6 @@ def handle_api_response(_func: Callable):
 			frappe.log_error(response["error"])
 			frappe.throw(
 				frappe._(
-					response["error"].get("code") +
-					"- " +
 					response["error"].get("description")
 				)
 			)

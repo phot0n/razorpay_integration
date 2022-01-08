@@ -21,10 +21,8 @@ def get_context(context):
 		indicator = "red"
 
 	log.payment_id = frappe.form_dict["razorpay_payment_id"]
-	payload = log.payload
-	log.payload = None
 	log.save()
 
 	context.message = message
 	context.indicator = indicator
-	context.redirect_to = json.loads(payload)["redirect_to"]
+	context.redirect_to = json.loads(log.payload).get("redirect_to", "/")
