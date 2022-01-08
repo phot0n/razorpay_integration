@@ -3,11 +3,20 @@
 {% block title %}{{ _("RazorPay Payment Status") }}{% endblock %}
 
 {% block page_content %}
-<h1>{{ _("RazorPay Payment Status") }}</h1>
-<div class="row">
-    <div class="col-sm-6">
-        Payment Done!!
-    </div>
-</div>
+<h2>{{ _("RazorPay Payment Status") }}</h2>
 {% endblock %}
 
+{% block script %}
+<script>
+    frappe.msgprint({
+        title: __("Payment Verification Status"),
+        indicator: __("{{ indicator }}"),
+        message: __("{{ message }}"),
+    })
+
+    setTimeout(
+        window.location.href = "{{ redirect_to }}",
+        4000
+    )
+</script>
+{% endblock %}

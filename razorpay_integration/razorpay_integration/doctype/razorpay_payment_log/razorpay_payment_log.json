@@ -9,8 +9,7 @@
  "field_order": [
   "reference_id",
   "status",
-  "reference_doctype",
-  "reference_docname",
+  "razorpay_setting",
   "column_break_3",
   "currency",
   "amount",
@@ -35,7 +34,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Created\nExpired\nPaid\nFailed",
+   "options": "Created\nPaid\nExpired\nFailed\nRefunded",
    "reqd": 1
   },
   {
@@ -110,12 +109,12 @@
    "collapsible": 1,
    "fieldname": "section_break_17",
    "fieldtype": "Section Break",
-   "label": "Payload"
+   "label": "Additional Data"
   },
   {
    "fieldname": "payload",
    "fieldtype": "Small Text",
-   "label": "Data"
+   "label": "Payload"
   },
   {
    "fieldname": "reference_id",
@@ -141,23 +140,15 @@
    "label": "Description"
   },
   {
-   "fieldname": "reference_doctype",
+   "fieldname": "razorpay_setting",
    "fieldtype": "Link",
-   "label": "Reference Doctype",
-   "options": "DocType",
-   "reqd": 1
-  },
-  {
-   "fieldname": "reference_docname",
-   "fieldtype": "Dynamic Link",
-   "label": "Reference Docname",
-   "options": "reference_doctype",
-   "reqd": 1
+   "label": "Razorpay Setting",
+   "options": "Razorpay Settings"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-01-07 13:18:30.200233",
+ "modified": "2022-01-08 19:26:55.153273",
  "modified_by": "Administrator",
  "module": "Razorpay Integration",
  "name": "Razorpay Payment Log",

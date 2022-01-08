@@ -178,9 +178,9 @@ class RazorpayPayment:
 
 		return handle_api_response(_func)
 
-
+	@staticmethod
 	def verify_payment_signature(
-		self,
+		api_secret: str,
 		*,
 		razorpay_payment_link_id: str,
 		razorpay_payment_link_reference_id: str,
@@ -194,7 +194,7 @@ class RazorpayPayment:
 			razorpay_payment_link_status + "|" + \
 			razorpay_payment_id
 
-		secret = bytes(self.auth.api_secret, "utf-8")
+		secret = bytes(api_secret, "utf-8")
 		msg = bytes(message, "utf-8")
 
 		if not hmac.compare_digest(

@@ -34,10 +34,6 @@ class RazorpaySettings(Document):
 	def get_payment_url(self, **kwargs):
 		if kwargs.get("order_id"):
 			kwargs["reference_id"] = kwargs.pop("order_id")
-		# TODO: override webform redirection with razorpay's one
-		# we can put the web form redirection in "notes" in
-		# razorpay's api or maybe the payload section in log doctype
-		kwargs["callback_url"] = kwargs.pop("redirect_to")
 
 		razorpay_response = RazorpayPayment(
 			self.api_key,
@@ -49,15 +45,17 @@ class RazorpaySettings(Document):
 			doctype="Razorpay Payment Log",
 			reference_id=razorpay_response.get("reference_id"),
 			status="Created",
-			reference_doctype=kwargs.get("reference_doctype"),
-			reference_docname=kwargs.get("reference_docname"),
+			razorpay_setting=self.name,
 			description=razorpay_response.get("description"),
 			currency=razorpay_response.get("currency"),
 			amount=flt(razorpay_response.get("amount") / 100), # razorpay returns the amount as it's sent to it
 			payment_link_id=razorpay_response.get("id"),
 			payment_url=razorpay_response.get("short_url"),
 			valid_till=razorpay_response.get("expire_by"),
-			customer=json.dumps(razorpay_response.get("customer"))
+			customer=json.dumps(razorpay_response.get("customer")),
+			payload=json.dumps(
+				dict(redirect_to=kwargs.get("redirect_to", "/"))
+			)
 		).insert(ignore_permissions=True)
 
 		return razorpay_response.get("short_url")
