@@ -9,14 +9,17 @@
 {% block script %}
 <script>
     frappe.msgprint({
-        title: __("Payment Verification Status"),
+        title: __("{{ title }}"),
         indicator: ("{{ indicator }}"),
         message: __("{{ message }}"),
+        primary_action: {
+            "label": "Proceed",
+            "client_action": "redirect"
+        }
     })
 
-    setTimeout(
-        window.location.href = "{{ redirect_to }}",
-        4000
-    )
+    function redirect() {
+        window.location.href = "{{ redirect_to }}"
+    }
 </script>
 {% endblock %}

@@ -32,11 +32,10 @@ class RazorpaySettings(Document):
 
 
 	def get_payment_url(self, **kwargs):
-		if kwargs.get("order_id"):
-			kwargs["reference_id"] = kwargs.pop("order_id")
-
-		if kwargs.get("payer_email") == "Guest":
-			del kwargs["payer_email"]
+		kwargs["payer_email"] = frappe.session.user if (
+			frappe.session.user not in ("Guest", "Administrator")
+		) else ""
+		kwargs["payer_name"] = frappe.utils.get_fullname(frappe.session.user)
 
 		razorpay_response = RazorpayPayment(
 			self.api_key,
