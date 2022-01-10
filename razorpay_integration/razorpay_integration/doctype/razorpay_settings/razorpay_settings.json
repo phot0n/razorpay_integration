@@ -27,7 +27,7 @@
    "reqd": 1
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "create_payment_gateway",
    "fieldtype": "Check",
    "label": "Create Payment Gateway"
@@ -35,7 +35,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-01-07 15:19:32.545721",
+ "modified": "2022-01-10 19:30:25.460248",
  "modified_by": "Administrator",
  "module": "Razorpay Integration",
  "name": "Razorpay Settings",
