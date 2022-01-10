@@ -1,6 +1,8 @@
 import frappe
-from frappe.utils.data import flt, cint
+from frappe.utils.data import flt, cint, now
 from frappe.utils.password import get_decrypted_password
+
+from datetime import datetime
 
 from razorpay_integration.api.razorpay_payment import RazorpayPayment
 from razorpay_integration.utils import get_epoch_time
@@ -48,7 +50,7 @@ def refund_payments() -> None:
 		).run()
 
 
-def update_expired_payment_link_status_in_payment_log() -> None:
+def update_payment_log_status_in_payment_log_for_expired_links() -> None:
 	log_doctype = frappe.qb.DocType("Razorpay Payment Log")
 
 	frappe.qb.update(
@@ -56,5 +58,30 @@ def update_expired_payment_link_status_in_payment_log() -> None:
 	).set(
 		log_doctype.status, "Expired"
 	).where(
-		(log_doctype.status == "Created") & (log_doctype.valid_till <= get_epoch_time())
+		(log_doctype.status == "Created") &
+		(log_doctype.valid_till[1:get_epoch_time()])
 	).run()
+
+
+def update_payment_log_status_for_payment_links_with_default_validity() -> None:
+	log_doctype = frappe.qb.DocType("Razorpay Payment Log")
+
+	creation_dates = frappe.qb.from_(
+		log_doctype
+	).select(
+		log_doctype.name, log_doctype.creation
+	).where(
+		(log_doctype.status == "Created") &
+		(log_doctype.valid_till == 0)
+	).run()
+
+	dt_format = "%Y-%m-%d %H:%M:%S.%f"
+	for name, creation_date in creation_dates:
+		if (datetime.strptime(now(), dt_format) - creation_date).days > 180:
+			frappe.qb.update(
+				log_doctype
+			).set(
+				log_doctype.status, "Expired"
+			).where(
+				log_doctype.name == name
+			).run()
