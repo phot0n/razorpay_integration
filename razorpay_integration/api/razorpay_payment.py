@@ -1,5 +1,6 @@
 # frappe imports
 import frappe
+from razorpay_integration.utils import add_to_epoch
 
 # third party imports
 import razorpay
@@ -110,13 +111,17 @@ class RazorpayPayment:
 						"phone": payer_phone
 					},
 					"description": description,
-					"expire_by": expire_by,
+					# by default every payment link will expire in around 15 mins
+					# this is the min time allowed by razorpay's api
+					"expire_by": expire_by or add_to_epoch(1000),
 					"notify": {
 						"sms": notify_via_sms,
 						"email": notify_via_email
 					},
-					"reference_id": reference_id or str(uuid4()), # use this ref id in razorpay log
-					"notes": notes # anything can be put in this as a key value pair
+					# used as reference id in razorpay log
+					"reference_id": reference_id or str(uuid4()),
+					# anything can be put in this as a key value pair
+					"notes": notes
 				},
 				headers={
 					"Content-type": "application/json"

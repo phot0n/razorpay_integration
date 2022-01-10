@@ -5,7 +5,7 @@ from frappe.utils.password import get_decrypted_password
 from razorpay_integration.api.razorpay_payment import RazorpayPayment
 
 
-def refund_payments():
+def refund_payments() -> None:
 	logs = frappe.get_all(
 		"Razorpay Payment Log",
 		filters={
@@ -46,5 +46,5 @@ def refund_payments():
 		)
 
 
-def handle_expired_payment_logs():
+def update_expired_payment_link_status_in_payment_log() -> None:
 	pass

@@ -103,7 +103,7 @@
   {
    "fieldname": "valid_till",
    "fieldtype": "Int",
-   "label": "Valid Till"
+   "label": "Valid Till (Unix Epoch)"
   },
   {
    "collapsible": 1,
@@ -149,7 +149,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-01-10 14:49:22.168136",
+ "modified": "2022-01-10 17:10:38.327819",
  "modified_by": "Administrator",
  "module": "Razorpay Integration",
  "name": "Razorpay Payment Log",
