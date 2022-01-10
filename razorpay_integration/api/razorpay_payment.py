@@ -195,10 +195,14 @@ class RazorpayPayment:
 		razorpay_signature: str,
 		raise_err: bool=False
 	):
-		message = razorpay_payment_link_id + "|" + \
-			razorpay_payment_link_reference_id + "|" + \
-			razorpay_payment_link_status + "|" + \
-			razorpay_payment_id
+		message = "|".join(
+			(
+				razorpay_payment_link_id,
+				razorpay_payment_link_reference_id,
+				razorpay_payment_link_status,
+				razorpay_payment_id
+			)
+		)
 
 		secret = bytes(api_secret, "utf-8")
 		msg = bytes(message, "utf-8")

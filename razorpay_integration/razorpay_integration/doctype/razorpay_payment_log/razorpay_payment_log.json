@@ -149,7 +149,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-01-10 18:07:40.302891",
+ "modified": "2022-01-10 19:02:59.220639",
  "modified_by": "Administrator",
  "module": "Razorpay Integration",
  "name": "Razorpay Payment Log",
@@ -170,5 +170,23 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [
+  {
+   "color": "Blue",
+   "title": "Created"
+  },
+  {
+   "color": "Green",
+   "title": "Paid"
+  },
+  {
+   "color": "Red",
+   "title": "Expired"
+  },
+  {
+   "color": "Gray",
+   "title": "Refund"
+  }
+ ],
+ "title_field": "razorpay_setting"
 }
