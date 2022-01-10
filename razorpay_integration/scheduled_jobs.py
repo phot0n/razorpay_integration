@@ -9,6 +9,7 @@ from razorpay_integration.utils import get_epoch_time
 def refund_payments() -> None:
 	log_doctype = "Razorpay Payment Log"
 	setting_doctype = "Razorpay Settings"
+
 	logs = frappe.get_all(
 		log_doctype,
 		filters={
@@ -19,6 +20,7 @@ def refund_payments() -> None:
 		fields=["name", "payment_id", "razorpay_setting", "amount"]
 	)
 
+	log_doctype = frappe.qb.DocType("Razorpay Payment Log")
 	for log in logs:
 		api_key = frappe.db.get_value(
 			setting_doctype,
@@ -35,18 +37,15 @@ def refund_payments() -> None:
 			)
 		).refund_payment(log.payment_id, cint(log.amount))
 
-		frappe.db.set_value(
-			log_doctype,
-			log.name,
-			"refund_id",
-			response["id"]
-		)
-		frappe.db.set_value(
-			log_doctype,
-			log.name,
-			"refund_amount",
-			flt(log.amount)
-		)
+		frappe.qb.update(
+			log_doctype
+		).set(
+			log_doctype.refund_id, response["id"]
+		).set(
+			log_doctype.refund_amount, flt(log.amount)
+		).where(
+			log_doctype.name == log.name
+		).run()
 
 
 def update_expired_payment_link_status_in_payment_log() -> None:
