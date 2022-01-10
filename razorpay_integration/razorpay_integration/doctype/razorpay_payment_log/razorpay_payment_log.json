@@ -143,12 +143,13 @@
    "fieldname": "razorpay_setting",
    "fieldtype": "Link",
    "label": "Razorpay Setting",
-   "options": "Razorpay Settings"
+   "options": "Razorpay Settings",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-01-10 13:28:16.413005",
+ "modified": "2022-01-10 14:49:22.168136",
  "modified_by": "Administrator",
  "module": "Razorpay Integration",
  "name": "Razorpay Payment Log",

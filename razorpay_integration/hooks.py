@@ -111,23 +111,23 @@ app_license = "MIT"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
+scheduler_events = {
 # 	"all": [
 # 		"razorpay_integration.tasks.all"
 # 	],
 # 	"daily": [
 # 		"razorpay_integration.tasks.daily"
 # 	],
-# 	"hourly": [
-# 		"razorpay_integration.tasks.hourly"
-# 	],
+	"hourly": [
+		"scheduled_jobs.refund_payments"
+	],
 # 	"weekly": [
 # 		"razorpay_integration.tasks.weekly"
 # 	],
 # 	"monthly": [
 # 		"razorpay_integration.tasks.monthly"
 # 	],
-# }
+}
 
 # Testing
 # -------

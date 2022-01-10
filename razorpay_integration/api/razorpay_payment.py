@@ -163,23 +163,21 @@ class RazorpayPayment:
 		)
 
 
-	def refund_payment(self, payment_id: str, refund_amt: int=0):
+	def refund_payment(self, payment_id: str, refund_amt: int):
 		# NOTE: Refund amount should be less than/equal to the payment amount
-		if not payment_id:
+		if not payment_id or not refund_amt:
 			frappe.throw(
 				frappe._(
-					"Please Provide Payment ID for which the amount needs to be refunded !"
+					"Please Provide Payment ID and/or Refund Amount" +
+					"for which the amount needs to be refunded !"
 				)
 			)
 
-		if not refund_amt:
-			# refund is done in full by default
-			_func = partial(self.rzp_client.payment.refund, payment_id)
-		else:
-			refund_amt *= 100
-			_func = partial(self.rzp_client.payment.refund, payment_id, refund_amt)
-
-		return handle_api_response(_func)
+		return handle_api_response(
+			partial(
+				self.rzp_client.payment.refund, payment_id, refund_amt * 100
+			)
+		)
 
 	@staticmethod
 	def verify_payment_signature(
