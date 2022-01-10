@@ -34,7 +34,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Created\nPaid\nExpired\nFailed\nRefunded",
+   "options": "Created\nPaid\nExpired\nRefund",
    "reqd": 1
   },
   {
@@ -148,7 +148,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-01-08 23:37:18.510187",
+ "modified": "2022-01-10 13:28:16.413005",
  "modified_by": "Administrator",
  "module": "Razorpay Integration",
  "name": "Razorpay Payment Log",

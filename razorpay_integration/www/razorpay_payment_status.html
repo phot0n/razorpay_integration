@@ -3,20 +3,35 @@
 {% block title %}{{ _("RazorPay Payment Status") }}{% endblock %}
 
 {% block page_content %}
-<h2>{{ _("RazorPay Payment Status") }}</h2>
+<h2>{{ _("Razorpay Payment Status") }}</h2>
+{% endblock %}
+
+{% block style %}
+<style>
+    h2 {
+        margin: 20%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
 {% endblock %}
 
 {% block script %}
 <script>
-    frappe.msgprint({
+    let d = new frappe.ui.Dialog({
         title: __("{{ title }}"),
-        indicator: ("{{ indicator }}"),
-        message: __("{{ message }}"),
-        primary_action: {
-            "label": "Proceed",
-            "client_action": "redirect"
-        }
-    })
+        primary_action_label: __("Proceed"),
+        primary_action: redirect,
+        onhide: () => {
+            frappe.show_alert(__("Redirecting"), 2);
+            setTimeout(redirect, 2000)
+        },
+    });
+    d.msg = $('<div class="razorpay-status">').appendTo(d.body);
+    d.msg.append("<p> {{ message }} </p>");
+
+    d.show();
 
     function redirect() {
         window.location.href = "{{ redirect_to }}"
