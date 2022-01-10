@@ -57,5 +57,5 @@ def update_expired_payment_link_status_in_payment_log() -> None:
 	).set(
 		log_doctype.status, "Expired"
 	).where(
-		(log_doctype.status == "Created") & (log_doctype.valid_till < get_epoch_time())
+		(log_doctype.status == "Created") & (log_doctype.valid_till <= get_epoch_time())
 	).run()

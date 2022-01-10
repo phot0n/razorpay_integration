@@ -113,7 +113,7 @@ class RazorpayPayment:
 					"description": description,
 					# by default every payment link will expire in around 15 mins
 					# this is the min time allowed by razorpay's api
-					"expire_by": expire_by or add_to_epoch(1000),
+					"expire_by": expire_by or add_to_epoch(905),
 					"notify": {
 						"sms": notify_via_sms,
 						"email": notify_via_email
