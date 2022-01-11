@@ -16,10 +16,6 @@ from razorpay_integration.api.razorpay_payment import RazorpayPayment
 
 
 class RazorpaySettings(Document):
-	'''
-	What do we need for every setting when being saved:
-		- are the api keys working/correct?
-	'''
 	def validate(self):
 		RazorpayPayment(self.api_key, self.api_secret)
 
