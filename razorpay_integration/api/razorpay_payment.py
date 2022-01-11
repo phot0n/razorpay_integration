@@ -36,9 +36,10 @@ BASE_API_URL = "https://api.razorpay.com/v1/"
 
 
 class RazorpayPayment:
-	def __init__(self, api_key: str, api_secret: str):
+	def __init__(self, api_key: str, api_secret: str, ignore_validation: bool=False):
 		self.auth = (api_key, api_secret)
-		self.validate_razorpay_creds()
+		if not ignore_validation:
+			self.validate_razorpay_creds()
 
 		# only initialize razorpay's client if the validation succeeds
 		self.rzp_client = razorpay.Client(auth=(api_key, api_secret))

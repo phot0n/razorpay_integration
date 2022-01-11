@@ -64,7 +64,8 @@ class RazorpaySettings(Document):
 
 		razorpay_response = RazorpayPayment(
 			self.api_key,
-			get_decrypted_password("Razorpay Settings", self.name, fieldname="api_secret")
+			get_decrypted_password("Razorpay Settings", self.name, fieldname="api_secret"),
+			ignore_validation=True
 		).get_or_create_payment_link(**kwargs)
 
 		log.payment_link_id = razorpay_response.get("id")

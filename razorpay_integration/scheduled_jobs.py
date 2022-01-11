@@ -30,14 +30,18 @@ def refund_payments() -> None:
 			fieldname=["api_key"]
 		)
 
-		response = RazorpayPayment(
-			api_key,
-			get_decrypted_password(
-				setting_doctype,
-				log.razorpay_setting,
-				fieldname="api_secret"
-			)
-		).refund_payment(log.payment_id, cint(log.amount))
+		try:
+			response = RazorpayPayment(
+				api_key,
+				get_decrypted_password(
+					setting_doctype,
+					log.razorpay_setting,
+					fieldname="api_secret"
+				),
+				ignore_validation=True
+			).refund_payment(log.payment_id, cint(log.amount))
+		except Exception:
+			continue
 
 		frappe.qb.update(
 			log_doctype
@@ -61,27 +65,3 @@ def update_payment_log_status_in_payment_log_for_expired_links() -> None:
 		(log_doctype.status == "Created") &
 		(log_doctype.valid_till[1:get_epoch_time()])
 	).run()
-
-
-def update_payment_log_status_for_payment_links_with_default_validity() -> None:
-	log_doctype = frappe.qb.DocType("Razorpay Payment Log")
-
-	creation_dates = frappe.qb.from_(
-		log_doctype
-	).select(
-		log_doctype.name, log_doctype.creation
-	).where(
-		(log_doctype.status == "Created") &
-		(log_doctype.valid_till == 0)
-	).run()
-
-	dt_format = "%Y-%m-%d %H:%M:%S.%f"
-	for name, creation_date in creation_dates:
-		if (datetime.strptime(now(), dt_format) - creation_date).days > 180:
-			frappe.qb.update(
-				log_doctype
-			).set(
-				log_doctype.status, "Expired"
-			).where(
-				log_doctype.name == name
-			).run()

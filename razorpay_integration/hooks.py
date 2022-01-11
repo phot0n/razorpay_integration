@@ -125,9 +125,9 @@ scheduler_events = {
 # 	"weekly": [
 # 		"razorpay_integration.tasks.weekly"
 # 	],
-	# "monthly": [
-	# 	"scheduled_jobs.update_payment_log_status_for_payment_links_with_default_validity"
-	# ],
+# 	"monthly": [
+# 		"scheduled_jobs.update_payment_log_status_for_payment_links_with_default_validity"
+# 	],
 }
 
 # Testing
