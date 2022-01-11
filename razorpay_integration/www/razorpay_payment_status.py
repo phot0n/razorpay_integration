@@ -25,7 +25,6 @@ def get_context(context):
 			context,
 			"Invalid Reference ID",
 			"The reference ID does not exist !",
-			"red",
 			redirect_to
 		)
 
@@ -38,14 +37,12 @@ def get_context(context):
 
 	log.status = "Paid"
 	message = "Payment Verification Successfull!!"
-	indicator = "green"
 	if not RazorpayPayment.verify_payment_signature(
 		get_decrypted_password("Razorpay Settings", log.razorpay_setting, fieldname="api_secret"),
 		**frappe.form_dict
 	):
 		log.status = "Refund"
 		message = "Payment Verification Failed!! Any amount deducted will get refunded back!"
-		indicator = "red"
 
 	log.payment_id = frappe.form_dict["razorpay_payment_id"]
 	log.save(ignore_permissions=True)
@@ -54,15 +51,13 @@ def get_context(context):
 		context,
 		title,
 		message,
-		indicator,
 		json.loads(log.payload).get("redirect_to", "/")
 	)
 
 
-def handle_context(ctx, title, message, indicator, redirect_to):
+def handle_context(ctx, title, message, redirect_to):
 	ctx.title = title
 	ctx.message = message
-	ctx.indicator = indicator
 	ctx.redirect_to = redirect_to
 
 
@@ -75,7 +70,6 @@ def is_handleable_status(ctx, status, title, redirect_to):
 			ctx,
 			title,
 			"The Status has already been verified and the Payment was Successful!",
-			"green",
 			redirect_to
 		)
 
@@ -84,7 +78,6 @@ def is_handleable_status(ctx, status, title, redirect_to):
 			ctx,
 			title,
 			"Your Payment is being Refunded. Please wait for sometime for it to be reflected in your account!",
-			"green",
 			redirect_to
 		)
 
@@ -94,7 +87,6 @@ def is_handleable_status(ctx, status, title, redirect_to):
 			ctx,
 			"Expired Reference ID",
 			"The Reference ID provided has been expired. Please start a new payment!",
-			"red",
 			redirect_to
 		)
 

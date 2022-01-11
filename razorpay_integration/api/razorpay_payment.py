@@ -1,6 +1,6 @@
 # frappe imports
 import frappe
-from razorpay_integration.utils import add_to_epoch
+from razorpay_integration.utils import add_to_epoch, get_epoch_time
 
 # third party imports
 import razorpay
@@ -89,6 +89,11 @@ class RazorpayPayment:
 		if not payer_name:
 			frappe.throw(
 				frappe._("Customer's name is required!")
+			)
+
+		if expire_by and expire_by <= get_epoch_time():
+			frappe.throw(
+				frappe._("Expiry time of Payment link should be atleast 15 mins in the future!!")
 			)
 
 		# razorpay assumes amount precision upto 2 places
