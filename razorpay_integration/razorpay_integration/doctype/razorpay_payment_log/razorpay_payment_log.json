@@ -1,6 +1,5 @@
 {
  "actions": [],
- "allow_rename": 1,
  "autoname": "field:reference_id",
  "creation": "2022-01-05 15:55:28.224008",
  "doctype": "DocType",
@@ -34,7 +33,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Created\nPaid\nExpired\nRefund",
+   "options": "Created\nPaid\nExpired\nRefund\nFailed",
    "reqd": 1
   },
   {
@@ -53,7 +52,8 @@
   {
    "fieldname": "payment_link_id",
    "fieldtype": "Data",
-   "label": "Payment Link ID"
+   "label": "Payment Link ID",
+   "unique": 1
   },
   {
    "collapsible": 1,
@@ -64,7 +64,8 @@
   {
    "fieldname": "payment_id",
    "fieldtype": "Data",
-   "label": "Payment ID"
+   "label": "Payment ID",
+   "unique": 1
   },
   {
    "fieldname": "amount",
@@ -125,7 +126,6 @@
    "label": "Reference Id",
    "no_copy": 1,
    "reqd": 1,
-   "set_only_once": 1,
    "unique": 1
   },
   {
@@ -148,13 +148,13 @@
    "fieldtype": "Link",
    "label": "Razorpay Setting",
    "options": "Razorpay Settings",
-   "reqd": 1,
-   "set_only_once": 1
+   "reqd": 1
   }
  ],
+ "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-01-11 13:04:48.833571",
+ "modified": "2022-01-11 17:21:35.747346",
  "modified_by": "Administrator",
  "module": "Razorpay Integration",
  "name": "Razorpay Payment Log",
@@ -162,15 +162,13 @@
  "owner": "Administrator",
  "permissions": [
   {
-   "create": 1,
    "email": 1,
    "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
    "role": "System Manager",
-   "share": 1,
-   "write": 1
+   "share": 1
   }
  ],
  "sort_field": "modified",
@@ -191,6 +189,10 @@
   {
    "color": "Gray",
    "title": "Refund"
+  },
+  {
+   "color": "Red",
+   "title": "Failed"
   }
  ],
  "title_field": "razorpay_setting",

@@ -9,7 +9,9 @@
  "field_order": [
   "api_key",
   "api_secret",
-  "create_payment_gateway"
+  "column_break_5",
+  "create_payment_gateway",
+  "enable_auto_refunds"
  ],
  "fields": [
   {
@@ -31,11 +33,21 @@
    "fieldname": "create_payment_gateway",
    "fieldtype": "Check",
    "label": "Create Payment Gateway"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_auto_refunds",
+   "fieldtype": "Check",
+   "label": "Enable Auto Refunds"
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-01-10 19:30:25.460248",
+ "modified": "2022-01-11 18:40:54.098611",
  "modified_by": "Administrator",
  "module": "Razorpay Integration",
  "name": "Razorpay Settings",

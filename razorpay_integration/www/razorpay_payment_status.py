@@ -41,8 +41,13 @@ def get_context(context):
 		get_decrypted_password("Razorpay Settings", log.razorpay_setting, fieldname="api_secret"),
 		**frappe.form_dict
 	):
-		log.status = "Refund"
+		log.status = "Failed"
+		if frappe.db.get_value("Razorpay Settings", log.razorpay_setting, "enable_auto_refunds"):
+			log.status = "Refund"
+
 		message = "Payment Verification Failed!! Any amount deducted will get refunded back!"
+
+		# TODO: success redirection and fail redirection
 
 	log.payment_id = frappe.form_dict["razorpay_payment_id"]
 	log.save(ignore_permissions=True)
@@ -66,28 +71,25 @@ def is_handleable_status(ctx, status, title, redirect_to):
 		return False
 
 	elif status == "Paid":
-		handle_context(
-			ctx,
-			title,
-			"The Status has already been verified and the Payment was Successful!",
-			redirect_to
-		)
+		message = "The Status has already been verified and the Payment was Successful!"
 
-	elif status =="Refund":
-		handle_context(
-			ctx,
-			title,
-			"Your Payment is being Refunded. Please wait for sometime for it to be reflected in your account!",
-			redirect_to
-		)
+	elif status == "Refund":
+		message = "Your Payment is being Refunded. " + \
+			"Please wait for sometime for it to be reflected in your account!"
+
+	elif status == "Failed":
+		message = "Your payment was not verified and is currently under review!"
 
 	else:
 		# expired
-		handle_context(
-			ctx,
-			"Expired Reference ID",
-			"The Reference ID provided has been expired. Please start a new payment!",
-			redirect_to
-		)
+		title = "Expired Reference ID"
+		message = "The Reference ID provided has been expired. Please start a new payment!"
+
+	handle_context(
+		ctx,
+		title,
+		message,
+		redirect_to
+	)
 
 	return True
