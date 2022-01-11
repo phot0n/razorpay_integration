@@ -32,15 +32,26 @@ class RazorpaySettings(Document):
 
 
 	def get_payment_url(self, **kwargs):
-		kwargs["payer_email"] = frappe.session.user if (
-			frappe.session.user not in ("Guest", "Administrator")
-		) else ""
+		'''
+			Required Kwargs:
+				- Reference Doctype
+				- Reference Docname
+				- Amount
+		'''
+
+		# NOTE: this is done for local setups otherwise razorpay
+		# throws a valdation error for email
+		kwargs["payer_email"] = kwargs.get("payer_email", frappe.session.user) if (
+				kwargs.get("payer_email", frappe.session.user) not in ("Guest", "Administrator")
+			) else ""
 		kwargs["payer_name"] = kwargs.get("payer_name", frappe.utils.get_fullname(frappe.session.user))
 
 		log = frappe.get_doc(
 			doctype="Razorpay Payment Log",
 			status="Created",
 			razorpay_setting=self.name,
+			reference_doctype=kwargs["reference_doctype"],
+			reference_docname=kwargs["reference_docname"],
 			description=kwargs.get("description"),
 			amount=flt(kwargs["amount"]),
 			payload=json.dumps(
