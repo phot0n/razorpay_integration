@@ -164,7 +164,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-01-12 14:06:43.786854",
+ "modified": "2022-01-12 18:35:53.092528",
  "modified_by": "Administrator",
  "module": "Razorpay Integration",
  "name": "Razorpay Payment Log",
@@ -201,7 +201,7 @@
    "title": "Refund"
   },
   {
-   "color": "Red",
+   "color": "Orange",
    "title": "Failed"
   },
   {

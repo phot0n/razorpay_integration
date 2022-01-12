@@ -36,16 +36,14 @@ def get_context(context):
 		return
 
 	log.status = "Paid"
-	message = "Payment Verification Successfull!!"
 	if not RazorpayPayment.verify_payment_signature(
 		get_decrypted_password("Razorpay Settings", log.razorpay_setting, fieldname="api_secret"),
 		**frappe.form_dict
 	):
 		log.status = "Failed"
 		if frappe.db.get_value("Razorpay Settings", log.razorpay_setting, "enable_auto_refunds"):
+			# this will automatically allow scheduler to pick this up in its next iteration
 			log.status = "Refund"
-
-		message = "Payment Verification Failed!! Any amount deducted will get refunded back!"
 
 		# TODO: success redirection and fail redirection
 
@@ -55,7 +53,7 @@ def get_context(context):
 	handle_context(
 		context,
 		title,
-		message,
+		get_message_based_on_status(log.status),
 		json.loads(log.payload).get("redirect_to", "/")
 	)
 
@@ -70,29 +68,27 @@ def is_handleable_status(ctx, status, title, redirect_to):
 	if status == "Created":
 		return False
 
-	elif status == "Paid":
-		message = "The Status has already been verified and the Payment was Successful!"
-
-	elif status == "Refund":
-		message = "Your Payment is being Refunded. " + \
-			"Please wait for sometime for it to be reflected in your account!"
-
-	elif status == "Failed":
-		message = "Your payment was not verified and is currently under review!"
-
-	elif status == "Refunded":
-		message = "Your payment has been refunded and might take some time to reflect in your account!!"
-
-	else:
-		# expired
+	elif status == "Expired":
 		title = "Expired Reference ID"
-		message = "The Reference ID provided has been expired. Please start a new payment!"
 
 	handle_context(
 		ctx,
 		title,
-		message,
+		get_message_based_on_status(status),
 		redirect_to
 	)
 
 	return True
+
+
+def get_message_based_on_status(status):
+	status_message = {
+		"Paid": "The Status has been verified and the Payment was Successful !",
+		"Refund": """Payment Verification Failed!! Your Payment is being Refunded.
+			Please wait for sometime for it to be reflected in your account !""",
+		"Failed": "Payment Verification Failed!! Your Payment is currently under review !",
+		"Refunded": "Your payment has been refunded and might take some time to reflect in your account !!",
+		"Expired": "The Reference ID provided has been expired. Please start a new payment !"
+	}
+
+	return status_message[status]
