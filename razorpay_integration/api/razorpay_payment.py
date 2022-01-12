@@ -2,9 +2,6 @@
 import frappe
 from razorpay_integration.utils import add_to_epoch, get_epoch_time
 
-# third party imports
-import razorpay
-
 # standard imports
 import hmac
 import hashlib
@@ -18,18 +15,17 @@ from uuid import uuid4
 TODO:
 	- payment links
 	- subscriptions
-	- refunds
+	- refunds (partial/full)
 
-Flow:
-	- Everthing starts with a payment link
-	- Then payment is initiated on that link
+NOTE(s):
+1. Any amount passed on to the api should be an int and
+	razorpay's api only supports upto 2 places of precision
+	Example:
+		20.02 should be passed as 2002,
+		20.00 should be passed as 2000
 
-For every payment link created we get an order id and payment link id
-When the payment is made successfully on the payment link, we get the payment id
-
-NOTE: Razorpay's wrapper library doesn't have the implementation for:
-	- payment link (in v1.2.0)
-	- fetching all customers (not even in master)
+2. Razorpay's python wrapper doesn't utilize the full potential of
+	their api hence a custom wrapper
 '''
 
 BASE_API_URL = "https://api.razorpay.com/v1/"
@@ -38,11 +34,12 @@ BASE_API_URL = "https://api.razorpay.com/v1/"
 class RazorpayPayment:
 	def __init__(self, api_key: str, api_secret: str, ignore_validation: bool=False):
 		self.auth = (api_key, api_secret)
+		self.headers = {
+			"content-type": "application/json"
+		}
+
 		if not ignore_validation:
 			self.validate_razorpay_creds()
-
-		# only initialize razorpay's client if the validation succeeds
-		self.rzp_client = razorpay.Client(auth=(api_key, api_secret))
 
 
 	def validate_razorpay_creds(self):
@@ -51,9 +48,7 @@ class RazorpayPayment:
 				requests.get,
 				BASE_API_URL + "customers?count=1",
 				auth=self.auth,
-				headers={
-					"content-type": "application/json"
-				}
+				headers=self.headers
 			)
 		)
 
@@ -125,9 +120,7 @@ class RazorpayPayment:
 					# anything can be put in this as a key value pair
 					"notes": notes
 				},
-				headers={
-					"Content-type": "application/json"
-				}
+				headers=self.headers
 			)
 		)
 
@@ -147,9 +140,7 @@ class RazorpayPayment:
 					requests.get,
 					f"{BASE_API_URL}/{api_endpoint}/{payment_link_id}",
 					auth=self.auth,
-					headers={
-						"content-type": "application/json"
-					}
+					headers=self.headers
 				)
 			)
 
@@ -166,25 +157,57 @@ class RazorpayPayment:
 			)
 
 		return handle_api_response(
-			partial(self.rzp_client.payment.fetch, payment_id)
+			partial(
+				requests.get,
+				f"{BASE_API_URL}/payments/{payment_id}",
+				auth=self.auth,
+				headers=self.headers
+			)
 		)
 
 
-	def refund_payment(self, payment_id: str, refund_amt: int):
+	def refund_payment(self, payment_id: str, refund_amt: int=0):
 		# NOTE: Refund amount should be less than/equal to the payment amount
-		if not payment_id or not refund_amt:
+		# if the refund amount is not provided, a full refund is initiated
+		if not payment_id:
 			frappe.throw(
 				frappe._(
-					"Please Provide Payment ID and/or Refund Amount" +
+					"Please Provide Payment ID " +
 					"for which the amount needs to be refunded !"
 				)
 			)
 
 		return handle_api_response(
 			partial(
-				self.rzp_client.payment.refund, payment_id, refund_amt
+				requests.post,
+				f"{BASE_API_URL}/payments/{payment_id}/refund",
+				auth=self.auth,
+				json={
+					"amount": refund_amt,
+					"speed": "optimum"
+				},
+				headers=self.headers
 			)
 		)
+
+
+	def get_refund(self, refund_id: str):
+		if not refund_id:
+			frappe.throw(
+				frappe._(
+					"Please Provide Refund ID to fetch the refund details"
+				)
+			)
+
+		return handle_api_response(
+			partial(
+				requests.get,
+				f"{BASE_API_URL}/refunds/{refund_id}",
+				auth=self.auth,
+				headers=self.headers
+			)
+		)
+
 
 	@staticmethod
 	def verify_payment_signature(
@@ -229,25 +252,15 @@ def handle_api_response(_func: Callable):
 	if not callable(_func):
 		return
 
-	# putting try except here to log razorpay's wrapper errors
-	try:
-		response = _func()
-	except Exception as e:
-		frappe.log_error(e)
+	response = _func().json()
+
+	# to get api's errors
+	if response.get("error"):
+		frappe.log_error(response["error"])
 		frappe.throw(
-			frappe._("Something Bad Happened !")
-		)
-
-	if isinstance(response, requests.Response):
-		response = response.json()
-
-		# to get api's errors
-		if response.get("error"):
-			frappe.log_error(response["error"])
-			frappe.throw(
-				frappe._(
-					response["error"].get("description")
-				)
+			frappe._(
+				response["error"].get("description")
 			)
+		)
 
 	return response

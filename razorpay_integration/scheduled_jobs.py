@@ -7,6 +7,7 @@ from razorpay_integration.utils import get_epoch_time
 
 
 def refund_payments() -> None:
+	# full refunds
 	log_doctype = "Razorpay Payment Log"
 	setting_doctype = "Razorpay Settings"
 
@@ -37,7 +38,7 @@ def refund_payments() -> None:
 					fieldname="api_secret"
 				),
 				ignore_validation=True
-			).refund_payment(log.payment_id, cint(log.amount * 100))
+			).refund_payment(log.payment_id)
 		except Exception:
 			continue
 
