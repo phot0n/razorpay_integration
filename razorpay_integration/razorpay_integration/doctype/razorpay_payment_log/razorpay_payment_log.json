@@ -35,7 +35,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
-   "options": "Created\nPaid\nExpired\nRefund\nFailed",
+   "options": "Created\nPaid\nExpired\nRefund\nFailed\nRefunded",
    "reqd": 1
   },
   {
@@ -164,7 +164,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-01-11 19:58:19.108226",
+ "modified": "2022-01-12 14:06:43.786854",
  "modified_by": "Administrator",
  "module": "Razorpay Integration",
  "name": "Razorpay Payment Log",
@@ -203,6 +203,10 @@
   {
    "color": "Red",
    "title": "Failed"
+  },
+  {
+   "color": "Yellow",
+   "title": "Refunded"
   }
  ],
  "track_changes": 1

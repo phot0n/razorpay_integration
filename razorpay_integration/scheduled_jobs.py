@@ -48,6 +48,8 @@ def refund_payments() -> None:
 			log_doctype.refund_id, response["id"]
 		).set(
 			log_doctype.refund_amount, flt(log.amount)
+		).set(
+			log_doctype.status, "Refunded"
 		).where(
 			log_doctype.name == log.name
 		).run()

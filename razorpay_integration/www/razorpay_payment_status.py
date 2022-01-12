@@ -80,6 +80,9 @@ def is_handleable_status(ctx, status, title, redirect_to):
 	elif status == "Failed":
 		message = "Your payment was not verified and is currently under review!"
 
+	elif status == "Refunded":
+		message = "Your payment has been refunded and might take some time to reflect in your account!!"
+
 	else:
 		# expired
 		title = "Expired Reference ID"
