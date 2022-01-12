@@ -1,8 +1,6 @@
 import frappe
-from frappe.utils.data import flt, cint, now
+from frappe.utils.data import flt, cint
 from frappe.utils.password import get_decrypted_password
-
-from datetime import datetime
 
 from razorpay_integration.api.razorpay_payment import RazorpayPayment
 from razorpay_integration.utils import get_epoch_time
@@ -39,7 +37,7 @@ def refund_payments() -> None:
 					fieldname="api_secret"
 				),
 				ignore_validation=True
-			).refund_payment(log.payment_id, cint(log.amount))
+			).refund_payment(log.payment_id, cint(log.amount * 100))
 		except Exception:
 			continue
 

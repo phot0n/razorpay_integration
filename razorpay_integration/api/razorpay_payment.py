@@ -97,10 +97,6 @@ class RazorpayPayment:
 				frappe._("Expiry time of Payment link should be atleast 15 mins in the future!!")
 			)
 
-		# razorpay assumes amount precision upto 2 places
-		# and needs it to be specified as a whole (int)
-		amount *= 100
-
 		return handle_api_response(
 			partial(
 				requests.post,
@@ -186,7 +182,7 @@ class RazorpayPayment:
 
 		return handle_api_response(
 			partial(
-				self.rzp_client.payment.refund, payment_id, refund_amt * 100
+				self.rzp_client.payment.refund, payment_id, refund_amt
 			)
 		)
 

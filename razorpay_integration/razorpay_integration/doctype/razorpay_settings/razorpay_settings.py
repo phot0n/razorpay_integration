@@ -5,7 +5,7 @@
 import frappe
 from frappe.integrations.utils import create_payment_gateway
 from frappe.model.document import Document
-from frappe.utils.data import flt
+from frappe.utils.data import cint, flt
 from frappe.utils.password import get_decrypted_password
 
 # standard imports
@@ -57,6 +57,10 @@ class RazorpaySettings(Document):
 
 		# use log name as reference id in payment link
 		kwargs["reference_id"] = log.name
+
+		# razorpay assumes amount precision upto 2 places
+		# and needs it to be specified as a whole (int)
+		kwargs["amount"] = cint(kwargs["amount"] * 100)
 
 		razorpay_response = RazorpayPayment(
 			self.api_key,
