@@ -12,7 +12,7 @@ from frappe.utils.password import get_decrypted_password
 import json
 
 # api imports
-from razorpay_integration.api.razorpay_payment import RazorpayPayment
+from razorpay_integration.api import RazorpayPayment
 
 
 class RazorpaySettings(Document):

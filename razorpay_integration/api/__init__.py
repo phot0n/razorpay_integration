@@ -32,7 +32,7 @@ BASE_API_URL = "https://api.razorpay.com/v1/"
 
 
 class RazorpayPayment:
-	def __init__(self, api_key: str, api_secret: str, ignore_validation: bool=False):
+	def __init__(self, api_key: str, api_secret: str, *, ignore_validation: bool=False):
 		self.auth = (api_key, api_secret)
 		self.headers = {
 			"content-type": "application/json"
@@ -62,19 +62,16 @@ class RazorpayPayment:
 		callback_url: str="",
 		description: str="",
 		expire_by: int=0,
+		reference_id: str="",
+		on_success: str="",
+		on_faliure: str="",
 		payer_email: str="",
 		payer_phone: str="",
-		reference_id: str="",
-		notify_via_email: bool=False,
-		notify_via_sms: bool=False,
 		notes: Dict={}, # kept "Dict" for python < v3.9 (ref: https://docs.python.org/3/library/typing.html#typing.Dict)
 		**kwargs
 	):
 		'''
 		ref: https://razorpay.com/docs/api/payment-links/#create-payment-link
-
-		Further customizations:
-			- ref: https://razorpay.com/docs/api/payment-links/customise/
 		'''
 
 		if amount < 1:
@@ -92,6 +89,8 @@ class RazorpayPayment:
 				frappe._("Expiry time of Payment link should be atleast 15 mins in the future!!")
 			)
 
+		notes.update({"on_success": "razorpay_integration.print_wow", "on_faliure": on_faliure})
+
 		return handle_api_response(
 			partial(
 				requests.post,
@@ -108,12 +107,11 @@ class RazorpayPayment:
 						"phone": payer_phone
 					},
 					"description": description,
-					# by default every payment link will expire in around 15 mins
-					# this is the min time allowed by razorpay's api
+					# min time allowed for expiry of every payment link is around 15 mins
 					"expire_by": expire_by or add_to_epoch(905),
 					"notify": {
-						"sms": notify_via_sms,
-						"email": notify_via_email
+						"sms": kwargs.get("notify_via_email", False),
+						"email": kwargs.get("notify_via_sms", False)
 					},
 					# used as reference id in razorpay log
 					"reference_id": reference_id or str(uuid4()),
@@ -127,6 +125,7 @@ class RazorpayPayment:
 
 	def get_or_create_payment_link(
 		self,
+		*,
 		payment_link_id: str="",
 		**kwargs
 	):
@@ -138,7 +137,7 @@ class RazorpayPayment:
 			return handle_api_response(
 				partial(
 					requests.get,
-					f"{BASE_API_URL}/{api_endpoint}/{payment_link_id}",
+					BASE_API_URL + f"{api_endpoint}/{payment_link_id}",
 					auth=self.auth,
 					headers=self.headers
 				)
@@ -159,7 +158,7 @@ class RazorpayPayment:
 		return handle_api_response(
 			partial(
 				requests.get,
-				f"{BASE_API_URL}/payments/{payment_id}",
+				BASE_API_URL + f"payments/{payment_id}",
 				auth=self.auth,
 				headers=self.headers
 			)
@@ -180,7 +179,7 @@ class RazorpayPayment:
 		return handle_api_response(
 			partial(
 				requests.post,
-				f"{BASE_API_URL}/payments/{payment_id}/refund",
+				BASE_API_URL + f"payments/{payment_id}/refund",
 				auth=self.auth,
 				json={
 					"amount": refund_amt,
@@ -202,7 +201,7 @@ class RazorpayPayment:
 		return handle_api_response(
 			partial(
 				requests.get,
-				f"{BASE_API_URL}/refunds/{refund_id}",
+				BASE_API_URL + f"refunds/{refund_id}",
 				auth=self.auth,
 				headers=self.headers
 			)

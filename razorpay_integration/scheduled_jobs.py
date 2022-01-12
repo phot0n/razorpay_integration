@@ -2,7 +2,7 @@ import frappe
 from frappe.utils.data import flt, cint
 from frappe.utils.password import get_decrypted_password
 
-from razorpay_integration.api.razorpay_payment import RazorpayPayment
+from razorpay_integration.api import RazorpayPayment
 from razorpay_integration.utils import get_epoch_time
 
 
