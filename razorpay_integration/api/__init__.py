@@ -8,7 +8,6 @@ import hashlib
 import requests
 from functools import partial
 from typing import Callable, Dict
-from uuid import uuid4
 
 
 '''
@@ -67,7 +66,7 @@ class RazorpayPayment:
 		on_faliure: str="",
 		payer_email: str="",
 		payer_phone: str="",
-		notes: Dict={}, # kept "Dict" for python < v3.9 (ref: https://docs.python.org/3/library/typing.html#typing.Dict)
+		notes: Dict={},
 		**kwargs
 	):
 		'''
@@ -89,7 +88,7 @@ class RazorpayPayment:
 				frappe._("Expiry time of Payment link should be atleast 15 mins in the future!!")
 			)
 
-		notes.update({"on_success": "razorpay_integration.print_wow", "on_faliure": on_faliure})
+		notes.update({"on_success": on_success, "on_faliure": on_faliure})
 
 		return handle_api_response(
 			partial(
@@ -114,7 +113,7 @@ class RazorpayPayment:
 						"email": kwargs.get("notify_via_sms", False)
 					},
 					# used as reference id in razorpay log
-					"reference_id": reference_id or str(uuid4()),
+					"reference_id": reference_id,
 					# anything can be put in this as a key value pair
 					"notes": notes
 				},
