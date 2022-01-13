@@ -16,8 +16,11 @@ from razorpay_integration.api import RazorpayPayment
 
 
 class RazorpaySettings(Document):
-	def validate(self):
-		RazorpayPayment(self.api_key, self.api_secret)
+	def on_update(self):
+		RazorpayPayment(
+			self.api_key,
+			get_decrypted_password("Razorpay Settings", self.name, fieldname="api_secret")
+		)
 
 		if self.create_payment_gateway:
 			create_payment_gateway(
@@ -29,6 +32,7 @@ class RazorpaySettings(Document):
 
 	def get_payment_url(self, **kwargs):
 		return get_payment_url(self.name, **kwargs)
+
 
 
 @frappe.whitelist()

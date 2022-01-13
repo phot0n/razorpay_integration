@@ -23,7 +23,7 @@ def update_payment_log_status_to_refund(docname: str) -> None:
 
 
 @frappe.whitelist()
-def update_failed_payment_log_status_to_refund() -> None:
+def update_failed_payment_log_status_to_refund() -> str:
 	log = frappe.qb.DocType("Razorpay Payment Log")
 
 	frappe.qb.update(
