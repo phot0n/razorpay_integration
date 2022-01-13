@@ -17,7 +17,7 @@ from razorpay_integration.api import RazorpayPayment
 
 class RazorpaySettings(Document):
 	def on_update(self):
-		RazorpayPayment(
+		RazorpayPayment.validate_razorpay_creds(
 			self.api_key,
 			get_decrypted_password("Razorpay Settings", self.name, fieldname="api_secret")
 		)
@@ -68,8 +68,7 @@ def get_payment_url(razorpay_setting_name: str, amount: float, reference_docname
 
 	razorpay_response = RazorpayPayment(
 		api_key,
-		get_decrypted_password("Razorpay Settings", razorpay_setting_name, fieldname="api_secret"),
-		ignore_validation=True
+		get_decrypted_password("Razorpay Settings", razorpay_setting_name, fieldname="api_secret")
 	).get_or_create_payment_link(**kwargs)
 
 	log.payment_link_id = razorpay_response.get("id")

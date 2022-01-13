@@ -36,8 +36,7 @@ def refund_payments() -> None:
 					setting_doctype,
 					log.razorpay_setting,
 					fieldname="api_secret"
-				),
-				ignore_validation=True
+				)
 			).refund_payment(log.payment_id)
 		except Exception:
 			continue

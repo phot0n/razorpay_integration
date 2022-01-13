@@ -43,8 +43,7 @@ def verify_payment_and_run_callbacks(razorpay_log_object):
 	# sending a request to get the payment link entity to get "notes" key
 	response = RazorpayPayment(
 		frappe.db.get_value("Razorpay Settings", razorpay_log_object.razorpay_setting, "api_key"),
-		api_secret,
-		ignore_validation=True
+		api_secret
 	).get_or_create_payment_link(payment_link_id=frappe.form_dict["razorpay_payment_link_id"])
 
 	if not RazorpayPayment.verify_payment_signature(

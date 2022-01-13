@@ -31,25 +31,63 @@ BASE_API_URL = "https://api.razorpay.com/v1/"
 
 
 class RazorpayPayment:
-	def __init__(self, api_key: str, api_secret: str, *, ignore_validation: bool=False):
+	def __init__(self, api_key: str, api_secret: str):
 		self.auth = (api_key, api_secret)
 		self.headers = {
 			"content-type": "application/json"
 		}
 
-		if not ignore_validation:
-			self.validate_razorpay_creds()
 
-
-	def validate_razorpay_creds(self):
+	@staticmethod
+	def validate_razorpay_creds(api_key: str, api_secret: str):
 		return handle_api_response(
 			partial(
 				requests.get,
 				BASE_API_URL + "customers?count=1",
-				auth=self.auth,
-				headers=self.headers
+				auth=(api_key, api_secret),
+				headers={
+					"content-type": "application/json"
+				}
 			)
 		)
+
+
+	@staticmethod
+	def verify_payment_signature(
+		api_secret: str,
+		*,
+		razorpay_payment_link_id: str,
+		razorpay_payment_link_reference_id: str,
+		razorpay_payment_link_status: str,
+		razorpay_payment_id: str,
+		razorpay_signature: str,
+		raise_err: bool=False
+	):
+		message = "|".join(
+			(
+				razorpay_payment_link_id,
+				razorpay_payment_link_reference_id,
+				razorpay_payment_link_status,
+				razorpay_payment_id
+			)
+		)
+
+		secret = bytes(api_secret, "utf-8")
+		msg = bytes(message, "utf-8")
+
+		if not hmac.compare_digest(
+			hmac.new(key=secret, msg=msg, digestmod=hashlib.sha256).hexdigest(),
+			razorpay_signature
+		):
+			# if this fails we can say the payment failed
+			if raise_err:
+				frappe.throw(
+					frappe._("Razorpay Payment Signature Verification Failed")
+				)
+
+			return False
+
+		return True
 
 
 	def _create_payment_link(
@@ -206,44 +244,6 @@ class RazorpayPayment:
 				headers=self.headers
 			)
 		)
-
-
-	@staticmethod
-	def verify_payment_signature(
-		api_secret: str,
-		*,
-		razorpay_payment_link_id: str,
-		razorpay_payment_link_reference_id: str,
-		razorpay_payment_link_status: str,
-		razorpay_payment_id: str,
-		razorpay_signature: str,
-		raise_err: bool=False
-	):
-		message = "|".join(
-			(
-				razorpay_payment_link_id,
-				razorpay_payment_link_reference_id,
-				razorpay_payment_link_status,
-				razorpay_payment_id
-			)
-		)
-
-		secret = bytes(api_secret, "utf-8")
-		msg = bytes(message, "utf-8")
-
-		if not hmac.compare_digest(
-			hmac.new(key=secret, msg=msg, digestmod=hashlib.sha256).hexdigest(),
-			razorpay_signature
-		):
-			# if this fails we can say the payment failed
-			if raise_err:
-				frappe.throw(
-					frappe._("Razorpay Payment Signature Verification Failed")
-				)
-
-			return False
-
-		return True
 
 
 
