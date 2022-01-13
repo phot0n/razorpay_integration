@@ -119,8 +119,8 @@ scheduler_events = {
 # 		"razorpay_integration.tasks.daily"
 # 	],
 	"hourly": [
-		"scheduled_jobs.refund_payments",
-		"scheduled_jobs.update_payment_log_status_in_payment_log_for_expired_links"
+		"razorpay_integration.scheduled_jobs.refund_payments",
+		"razorpay_integration.scheduled_jobs.update_payment_log_status_in_payment_log_for_expired_links"
 	],
 # 	"weekly": [
 # 		"razorpay_integration.tasks.weekly"
