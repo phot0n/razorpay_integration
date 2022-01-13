@@ -175,15 +175,16 @@ class RazorpayPayment:
 				)
 			)
 
+		json = {"amount": refund_amt, "speed": "optimum"} if (
+			refund_amt
+		) else {"speed": "optimum"}
+
 		return handle_api_response(
 			partial(
 				requests.post,
 				BASE_API_URL + f"payments/{payment_id}/refund",
 				auth=self.auth,
-				json={
-					"amount": refund_amt,
-					"speed": "optimum"
-				},
+				json=json,
 				headers=self.headers
 			)
 		)

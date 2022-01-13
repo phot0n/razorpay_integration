@@ -21,7 +21,7 @@ def refund_payments() -> None:
 		fields=["name", "payment_id", "razorpay_setting", "amount"]
 	)
 
-	log_doctype = frappe.qb.DocType("Razorpay Payment Log")
+	log_doctype = frappe.qb.DocType(log_doctype)
 	for log in logs:
 		api_key = frappe.db.get_value(
 			setting_doctype,
