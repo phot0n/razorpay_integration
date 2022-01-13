@@ -26,9 +26,6 @@ def get_context(context, razorpay_log_object, status):
 	razorpay_log_object.payment_id = frappe.form_dict["razorpay_payment_id"]
 	razorpay_log_object.save(ignore_permissions=True)
 
-	# not really working without explicit commit
-	frappe.db.commit()
-
 	update_context_obj(
 		context,
 		title,

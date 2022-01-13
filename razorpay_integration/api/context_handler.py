@@ -7,7 +7,7 @@ from razorpay_integration.api import RazorpayPayment
 
 
 def handle_get_context(fn):
-	if not frappe.form_dict.get("razorpay_payment_link_reference_id"):
+	if not frappe.form_dict.get("razorpay_payment_link_reference_id") or len(frappe.form_dict) < 5:
 		redirect_handler("Information is missing", "Link/URL is incomplete!")
 
 	@wraps(fn)
