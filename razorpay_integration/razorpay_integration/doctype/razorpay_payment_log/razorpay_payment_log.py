@@ -20,3 +20,19 @@ def update_payment_log_status_to_refund(docname: str) -> None:
 	).where(
 		log.name == docname
 	).run()
+
+
+@frappe.whitelist()
+def update_failed_payment_log_status_to_refund() -> None:
+	log = frappe.qb.DocType("Razorpay Payment Log")
+
+	frappe.qb.update(
+		log
+	).set(
+		log.status, "Refund"
+	).where(
+		log.status == "Failed"
+	).run()
+
+	return """Changed Status to Refund.
+		These jobs will be picked up by the hourly scheduler in its next iteration !!"""
