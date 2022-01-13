@@ -6,10 +6,11 @@ from razorpay_integration.api.context_handler import handle_get_context
 
 
 @handle_get_context
-def get_context(context, razorpay_log_object, is_status_updated):
+def get_context(context, razorpay_log_object, status):
 	title = "Payment Verification Status"
 
-	if not is_status_updated:
+	if not status:
+		# status was alread set and user has revisited the page
 		if razorpay_log_object.status == "Expired":
 			title = "Expired Reference ID"
 
@@ -21,6 +22,7 @@ def get_context(context, razorpay_log_object, is_status_updated):
 		)
 		return
 
+	razorpay_log_object.status = status
 	razorpay_log_object.payment_id = frappe.form_dict["razorpay_payment_id"]
 	razorpay_log_object.save(ignore_permissions=True)
 

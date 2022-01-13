@@ -17,12 +17,11 @@ def handle_get_context(fn):
 		except frappe.DoesNotExistError:
 			redirect_handler("Invalid Reference ID", "The reference ID does not exist !")
 
-		is_status_updated = False
+		status = None
 		if log.status == "Created":
-			is_status_updated = True
-			verify_payment_and_run_callbacks(log)
+			status = verify_payment_and_run_callbacks(log)
 
-		return fn(context, log, is_status_updated)
+		return fn(context, log, status)
 
 	return wrapper
 
@@ -40,6 +39,7 @@ def verify_payment_and_run_callbacks(razorpay_log_object):
 	api_secret = get_decrypted_password(
 		"Razorpay Settings", razorpay_log_object.razorpay_setting, fieldname="api_secret"
 	)
+
 	# sending a request to get the payment link entity to get "notes" key
 	response = RazorpayPayment(
 		frappe.db.get_value("Razorpay Settings", razorpay_log_object.razorpay_setting, "api_key"),
@@ -51,19 +51,22 @@ def verify_payment_and_run_callbacks(razorpay_log_object):
 		api_secret,
 		**frappe.form_dict
 	):
-		razorpay_log_object.status = "Failed"
+		status = "Failed"
+
 		if frappe.db.get_value(
 			"Razorpay Settings", razorpay_log_object.razorpay_setting, "enable_auto_refunds"
 		):
 			# this will automatically allow scheduler to pick this up in its next iteration
-			razorpay_log_object.status = "Refund"
+			status = "Refund"
 
 		on_faliure = response["notes"]["on_faliure"]
 		if on_faliure:
 			frappe.get_attr(on_faliure)()
 
 	else:
-		razorpay_log_object.status = "Paid"
+		status = "Paid"
 		on_success = response["notes"]["on_success"]
 		if on_success:
 			frappe.get_attr(on_success)()
+
+	return status

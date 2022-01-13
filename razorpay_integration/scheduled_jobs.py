@@ -1,5 +1,5 @@
 import frappe
-from frappe.utils.data import flt, cint
+from frappe.utils.data import flt
 from frappe.utils.password import get_decrypted_password
 
 from razorpay_integration.api import RazorpayPayment
