@@ -6,6 +6,9 @@ from frappe.model.document import Document
 
 class RazorpayPaymentLog(Document):
 	def autoname(self):
+		# NOTE: setting a time based hash name so as to avoid collision
+		# b/w reference id's used in payment links - as we're not sure if the ref id's
+		# should be unique across all accounts or just that account (i'm kinda thinking former)
 		self.name = frappe.generate_hash("Razorpay Payment Log", length=40)
 
 

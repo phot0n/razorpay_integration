@@ -22,7 +22,6 @@ def convert_epoch_to_timestamp(epoch_time: int):
 	# converts any given epoch time to human readable datetime
 	return time.ctime(epoch_time)
 
-
 @frappe.whitelist()
 def get_payment_url(
 	razorpay_setting_name: str,
@@ -64,6 +63,7 @@ def get_payment_url(
 	# and needs it to be specified as a whole (int)
 	kwargs["amount"] = cint(amount * 100)
 
+	# TODO: figure out a better way to avoid these 2 db calls
 	razorpay_response = RazorpayPayment(
 		frappe.db.get_value("Razorpay Settings", razorpay_setting_name, "api_key"),
 		get_decrypted_password("Razorpay Settings", razorpay_setting_name, fieldname="api_secret")
@@ -76,7 +76,6 @@ def get_payment_url(
 	log.save(ignore_permissions=True)
 
 	return razorpay_response.get("short_url")
-
 
 def run_callback(method_string: str, **kwargs):
 	if not method_string:

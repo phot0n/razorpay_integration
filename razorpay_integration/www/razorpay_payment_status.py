@@ -74,6 +74,7 @@ def is_new_payment(ctx, status, title):
 
 	# status was already set and user has revisited the page
 	if status == "Expired":
+		# we generally won't encounter expired ref id in the verification page
 		title = "Expired Reference ID"
 
 	update_context(
@@ -89,8 +90,8 @@ def is_new_payment(ctx, status, title):
 def get_message_based_on_status(status: str):
 	status_message = {
 		"Paid": "The Status has been verified and the Payment was Successful !",
-		"Refund": """Payment Verification Failed!! Your Payment is being Refunded.
-			Please wait for sometime for it to be reflected in your account !""",
+		"Refund": "Payment Verification Failed!! Your Payment is being Refunded. \
+			Please wait for sometime for it to be reflected in your account !",
 		"Failed": "Payment Verification Failed!! Your Payment is currently under review !",
 		"Refunded": "Your payment has been refunded and might take some time to reflect in your account !!",
 		"Expired": "The Reference ID provided has been expired. Please start a new payment !"
