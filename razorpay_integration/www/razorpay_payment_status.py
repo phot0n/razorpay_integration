@@ -1,46 +1,91 @@
 import frappe
+from frappe.utils.password import get_decrypted_password
 
 import json
+from typing import Dict
 
-from razorpay_integration.api.context_handler import handle_get_context
+from razorpay_integration.api import RazorpayPayment
+from razorpay_integration.utils import run_callback
 
 
-@handle_get_context
-def get_context(context, razorpay_log_object, status):
-	title = "Payment Verification Status"
+def get_context(context):
+	if not frappe.form_dict.get("razorpay_payment_link_reference_id") or len(frappe.form_dict) < 5:
+		frappe.redirect_to_message(
+			frappe._("Information is missing"), frappe._("Link/URL is incomplete!")
+		)
+		frappe.local.flags.redirect_location = frappe.local.response.location
 
-	if not status:
-		# status was alread set and user has revisited the page
-		if razorpay_log_object.status == "Expired":
-			title = "Expired Reference ID"
+		raise frappe.Redirect
 
-		update_context_obj(
+	log_doctype = "Razorpay Payment Log"
+	log = frappe.db.get_value(
+		log_doctype,
+		frappe.form_dict["razorpay_payment_link_reference_id"],
+		fieldname=["status", "payload", "razorpay_setting"]
+	)
+	if not log:
+		update_context(
 			context,
-			title,
-			get_message_based_on_status(razorpay_log_object.status),
+			"Invalid Reference ID",
+			"The reference ID does not exist !",
 			"/"
 		)
 		return
 
-	razorpay_log_object.status = status
-	razorpay_log_object.payment_id = frappe.form_dict["razorpay_payment_id"]
-	razorpay_log_object.save(ignore_permissions=True)
+	title = "Payment Verification Status"
+	if not is_new_payment(context, log.status, title):
+		return
 
-	update_context_obj(
+	payload = json.loads(log.payload)
+	updated_status = verify_payment_and_run_callback(log.razorpay_setting, payload)
+	payment_id = frappe.form_dict["razorpay_payment_id"]
+
+	# updating the log
+	frappe.qb.update(
+		log_doctype
+	).set(
+		"status", updated_status
+	).set(
+		"payment_id" , payment_id
+	).set(
+		"payload", None
+	).where(
+		"name" == frappe.form_dict["razorpay_payment_link_reference_id"]
+	).run()
+
+	update_context(
 		context,
 		title,
-		get_message_based_on_status(razorpay_log_object.status),
-		json.loads(razorpay_log_object.payload).get("redirect_to", "/")
+		get_message_based_on_status(updated_status),
+		payload.get("redirect_to", "/")
 	)
 
 
-def update_context_obj(ctx, title, message, redirect_to):
+def update_context(ctx, title: str, message: str, redirect_to: str):
 	ctx.title = title
 	ctx.message = message
 	ctx.redirect_to = redirect_to
 
 
-def get_message_based_on_status(status):
+def is_new_payment(ctx, status, title):
+	if status == "Created":
+		return True
+
+	# status was already set and user has revisited the page
+	if status == "Expired":
+		title = "Expired Reference ID"
+
+	update_context(
+		ctx,
+		title,
+		get_message_based_on_status(status),
+		"/"
+	)
+
+	return False
+
+
+def get_message_based_on_status(status: str):
 	status_message = {
 		"Paid": "The Status has been verified and the Payment was Successful !",
 		"Refund": """Payment Verification Failed!! Your Payment is being Refunded.
@@ -51,3 +96,26 @@ def get_message_based_on_status(status):
 	}
 
 	return status_message[status]
+
+
+def verify_payment_and_run_callback(razorpay_setting: str, razorpay_log_payload: Dict):
+	api_secret = get_decrypted_password(
+		"Razorpay Settings", razorpay_setting, fieldname="api_secret"
+	)
+
+	if not RazorpayPayment.verify_payment_signature(
+		api_secret,
+		**frappe.form_dict
+	):
+		status = "Failed"
+		if frappe.db.get_value("Razorpay Settings", razorpay_setting, "enable_auto_refunds"):
+			# automatically allows scheduler to pick this up in its next iteration
+			status = "Refund"
+
+		run_callback(razorpay_log_payload.get("on_failed_payment", ""))
+
+	else:
+		status = "Paid"
+		run_callback(razorpay_log_payload.get("on_success_payment", ""))
+
+	return status

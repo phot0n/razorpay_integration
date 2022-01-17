@@ -40,4 +40,4 @@ def update_failed_payment_log_status_to_refund() -> str:
 	).run()
 
 	return """Changed Status to Refund.
-		These jobs will be picked up by the hourly scheduler in its next iteration !!"""
+		Jobs will be picked up by the hourly scheduler in its next iteration !!"""
