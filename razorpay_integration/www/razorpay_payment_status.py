@@ -8,6 +8,8 @@ from razorpay_integration.api import RazorpayPayment
 from razorpay_integration.utils import run_callback
 
 
+no_cache = 1
+
 def get_context(context):
 	if not frappe.form_dict.get("razorpay_payment_link_reference_id") or len(frappe.form_dict) < 5:
 		frappe.redirect_to_message(
@@ -54,6 +56,10 @@ def get_context(context):
 		log_doctype.name == frappe.form_dict["razorpay_payment_link_reference_id"]
 	).run()
 
+	# currently without explicit commit the log isn't updating
+	# (no clue why)
+	# frappe.db.commit()
+
 	update_context(
 		context,
 		title,
@@ -90,10 +96,9 @@ def is_new_payment(ctx, status, title):
 def get_message_based_on_status(status: str):
 	status_message = {
 		"Paid": "The Status has been verified and the Payment was Successful !",
-		"Refund": "Payment Verification Failed!! Your Payment is being Refunded. \
-			Please wait for sometime for it to be reflected in your account !",
+		"Refund": "Your Payment is being Refunded. Please wait for sometime for it to be reflected in your account !",
 		"Failed": "Payment Verification Failed!! Your Payment is currently under review !",
-		"Refunded": "Your payment has been refunded and might take some time to reflect in your account !!",
+		"Refunded": "Your payment has been Refunded and might take some time to reflect in your account !!",
 		"Expired": "The Reference ID provided has been expired. Please start a new payment !"
 	}
 
