@@ -5,8 +5,8 @@ import frappe
 from frappe.model.document import Document
 
 class RazorpayPaymentLog(Document):
-	pass
-
+	def autoname(self):
+		self.name = frappe.generate_hash("Razorpay Payment Log", length=40)
 
 
 @frappe.whitelist()

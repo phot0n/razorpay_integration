@@ -9,8 +9,6 @@ import json
 import math
 import time
 
-from razorpay_integration.api import RazorpayPayment
-
 
 def get_epoch_time() -> int:
 	# returns the current epoch time
@@ -33,6 +31,8 @@ def get_payment_url(
 	reference_doctype: str,
 	**kwargs
 ):
+	from razorpay_integration.api import RazorpayPayment
+
 	# NOTE: this is done for local setups otherwise razorpay
 	# throws a valdation error for email
 	kwargs["payer_email"] = kwargs.get("payer_email", frappe.session.user) if (

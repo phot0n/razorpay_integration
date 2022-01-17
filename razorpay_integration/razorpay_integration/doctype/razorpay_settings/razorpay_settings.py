@@ -12,7 +12,6 @@ from frappe.utils.password import get_decrypted_password
 import json
 
 # api imports
-from razorpay_integration.utils import get_payment_url
 from razorpay_integration.api import RazorpayPayment
 
 
@@ -32,4 +31,5 @@ class RazorpaySettings(Document):
 
 
 	def get_payment_url(self, **kwargs):
+		from razorpay_integration.utils import get_payment_url
 		return get_payment_url(self.name, **kwargs)

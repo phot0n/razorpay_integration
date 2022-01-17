@@ -33,24 +33,25 @@ def get_context(context):
 		return
 
 	title = "Payment Verification Status"
-	if not is_new_payment(context, log.status, title):
+	if not is_new_payment(context, log[0], title):
 		return
 
-	payload = json.loads(log.payload)
-	updated_status = verify_payment_and_run_callback(log.razorpay_setting, payload)
+	payload = json.loads(log[1])
+	updated_status = verify_payment_and_run_callback(log[2], payload)
 	payment_id = frappe.form_dict["razorpay_payment_id"]
 
 	# updating the log
+	log_doctype = frappe.qb.DocType(log_doctype)
 	frappe.qb.update(
 		log_doctype
 	).set(
-		"status", updated_status
+		log_doctype.status, updated_status
 	).set(
-		"payment_id" , payment_id
+		log_doctype.payment_id, payment_id
 	).set(
-		"payload", None
+		log_doctype.payload, None
 	).where(
-		"name" == frappe.form_dict["razorpay_payment_link_reference_id"]
+		log_doctype.name == frappe.form_dict["razorpay_payment_link_reference_id"]
 	).run()
 
 	update_context(
@@ -112,10 +113,10 @@ def verify_payment_and_run_callback(razorpay_setting: str, razorpay_log_payload:
 			# automatically allows scheduler to pick this up in its next iteration
 			status = "Refund"
 
-		run_callback(razorpay_log_payload.get("on_failed_payment", ""))
+		run_callback(razorpay_log_payload.get("on_failed_payment"))
 
 	else:
 		status = "Paid"
-		run_callback(razorpay_log_payload.get("on_success_payment", ""))
+		run_callback(razorpay_log_payload.get("on_success_payment"))
 
 	return status
