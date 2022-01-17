@@ -11,12 +11,6 @@ class RazorpayPaymentLog(Document):
 
 @frappe.whitelist()
 def update_payment_log_status_to_refund(docname: str) -> None:
-	if not frappe.db.exists({
-		"doctype": "Razorpay Payment Log",
-		"status": "Failed"
-	}):
-		return "No Failed Payments to add to scheduler"
-
 	log = frappe.qb.DocType("Razorpay Payment Log")
 	frappe.qb.update(
 		log
@@ -29,8 +23,13 @@ def update_payment_log_status_to_refund(docname: str) -> None:
 
 @frappe.whitelist()
 def update_failed_payment_log_status_to_refund() -> str:
-	log = frappe.qb.DocType("Razorpay Payment Log")
+	if not frappe.db.exists({
+		"doctype": "Razorpay Payment Log",
+		"status": "Failed"
+	}):
+		return "No Failed Payments to add to scheduler"
 
+	log = frappe.qb.DocType("Razorpay Payment Log")
 	frappe.qb.update(
 		log
 	).set(
