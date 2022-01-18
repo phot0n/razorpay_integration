@@ -40,7 +40,7 @@ def get_context(context):
 
 	payload = json.loads(log[1])
 	updated_status = verify_payment_and_run_callback(log[2], payload)
-	payment_id = frappe.form_dict["razorpay_payment_id"]
+	payment_id = frappe.form_dict.razorpay_payment_id
 
 	# updating the log
 	log_doctype = frappe.qb.DocType(log_doctype)
@@ -53,12 +53,11 @@ def get_context(context):
 	).set(
 		log_doctype.payload, None
 	).where(
-		log_doctype.name == frappe.form_dict["razorpay_payment_link_reference_id"]
+		log_doctype.name == frappe.form_dict.razorpay_payment_link_reference_id
 	).run()
 
 	# currently without explicit commit the log isn't updating
-	# (no clue why)
-	# frappe.db.commit()
+	frappe.db.commit()
 
 	update_context(
 		context,
@@ -110,19 +109,22 @@ def verify_payment_and_run_callback(razorpay_setting: str, razorpay_log_payload:
 		"Razorpay Settings", razorpay_setting, fieldname="api_secret"
 	)
 
+	status = "Paid"
 	if not RazorpayPayment.verify_payment_signature(
 		api_secret,
-		**frappe.form_dict
+		razorpay_payment_link_id=frappe.form_dict.razorpay_payment_link_id,
+		razorpay_payment_link_reference_id=frappe.form_dict.razorpay_payment_link_reference_id,
+		razorpay_payment_link_status=frappe.form_dict.razorpay_payment_link_status,
+		razorpay_payment_id=frappe.form_dict.razorpay_payment_id,
+		razorpay_signature=frappe.form_dict.razorpay_signature
 	):
 		status = "Failed"
 		if frappe.db.get_value("Razorpay Settings", razorpay_setting, "enable_auto_refunds"):
 			# automatically allows scheduler to pick this up in its next iteration
 			status = "Refund"
 
-		run_callback(razorpay_log_payload.get("on_failed_payment"))
-
-	else:
-		status = "Paid"
-		run_callback(razorpay_log_payload.get("on_success_payment"))
+	run_callback(
+		razorpay_log_payload.get("on_success_payment" if status =="Paid" else "on_failed_payment")
+	)
 
 	return status
