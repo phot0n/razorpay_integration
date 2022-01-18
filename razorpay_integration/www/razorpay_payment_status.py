@@ -3,6 +3,7 @@ from frappe.utils.password import get_decrypted_password
 
 import json
 from typing import Dict
+from urllib.parse import urlencode
 
 from razorpay_integration.api import RazorpayPayment
 from razorpay_integration.utils import run_callback
@@ -23,7 +24,9 @@ def get_context(context):
 	log = frappe.db.get_value(
 		log_doctype,
 		frappe.form_dict["razorpay_payment_link_reference_id"],
-		fieldname=["status", "payload", "razorpay_setting"]
+		fieldname=[
+			"status", "payload", "razorpay_setting", "reference_doctype", "reference_docname"
+		]
 	)
 	if not log:
 		update_context(
@@ -59,11 +62,21 @@ def get_context(context):
 	# currently without explicit commit the log isn't updating
 	frappe.db.commit()
 
+	# NOTE: this is for backwards compatibility
+	# as on_payment_authorized methods are used in erpnext
+	backwards_redirect_to = None
+	if updated_status == "Paid":
+		backwards_redirect_to = run_on_payment_authorized_method(log[3], log[4])
+
+	redirect_to = backwards_redirect_to or payload.get("redirect_to", "/")
+	if payload.get("redirect_message"):
+		redirect_to += "&" + urlencode({'redirect_message': payload["redirect_message"]})
+
 	update_context(
 		context,
 		title,
 		get_message_based_on_status(updated_status),
-		payload.get("redirect_to", "/")
+		redirect_to
 	)
 
 
@@ -128,3 +141,15 @@ def verify_payment_and_run_callback(razorpay_setting: str, razorpay_log_payload:
 	)
 
 	return status
+
+
+def run_on_payment_authorized_method(reference_doctype: str, reference_docname: str):
+	redirect_to = None
+	try:
+		redirect_to = frappe.get_doc(
+			reference_doctype, reference_docname
+		).run_method("on_payment_authorized", "Completed")
+	except Exception as e:
+		frappe.log_error(e)
+
+	return redirect_to
