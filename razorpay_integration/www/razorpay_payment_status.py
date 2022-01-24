@@ -23,10 +23,11 @@ def get_context(context):
 	log_doctype = "Razorpay Payment Log"
 	log = frappe.db.get_value(
 		log_doctype,
-		frappe.form_dict["razorpay_payment_link_reference_id"],
+		frappe.form_dict.razorpay_payment_link_reference_id,
 		fieldname=[
 			"status", "payload", "razorpay_setting", "reference_doctype", "reference_docname"
-		]
+		],
+		as_dict=True
 	)
 	if not log:
 		update_context(
@@ -38,39 +39,24 @@ def get_context(context):
 		return
 
 	title = "Payment Verification Status"
-	if not is_new_payment(context, log[0], title):
+	if not is_new_payment(context, log.status, title):
 		return
 
-	payload = json.loads(log[1])
-	updated_status = verify_payment_and_run_callback(log[2], payload)
+	payload = json.loads(log.payload)
+	updated_status = verify_payment_and_run_callback(log.razorpay_setting, payload)
 	payment_id = frappe.form_dict.razorpay_payment_id
 
-	# updating the log
-	log_doctype = frappe.qb.DocType(log_doctype)
-	frappe.qb.update(
-		log_doctype
-	).set(
-		log_doctype.status, updated_status
-	).set(
-		log_doctype.payment_id, payment_id
-	).set(
-		log_doctype.payload, None
-	).where(
-		log_doctype.name == frappe.form_dict.razorpay_payment_link_reference_id
-	).run()
-
-	# currently without explicit commit the log isn't updating
-	frappe.db.commit()
+	update_payment_log(updated_status, payment_id)
 
 	# NOTE: this is for backwards compatibility
 	# as on_payment_authorized methods are used in erpnext
 	backwards_redirect_to = None
 	if updated_status == "Paid":
-		backwards_redirect_to = run_on_payment_authorized_method(log[3], log[4])
+		backwards_redirect_to = run_on_payment_authorized_method(log.reference_doctype, log.reference_docname)
 
 	redirect_to = backwards_redirect_to or payload.get("redirect_to", "/")
 	if payload.get("redirect_message"):
-		redirect_to += "&" + urlencode({'redirect_message': payload["redirect_message"]})
+		redirect_to += "&" + urlencode({"redirect_message": payload["redirect_message"]})
 
 	update_context(
 		context,
@@ -137,10 +123,29 @@ def verify_payment_and_run_callback(razorpay_setting: str, razorpay_log_payload:
 			status = "Refund"
 
 	run_callback(
-		razorpay_log_payload.get("on_success_payment" if status =="Paid" else "on_failed_payment")
+		razorpay_log_payload.get("on_success" if status == "Paid" else "on_failure")
 	)
 
 	return status
+
+
+def update_payment_log(updated_status: str, payment_id: str):
+	# updating the log
+	log_doctype = frappe.qb.DocType("Razorpay Payment Log")
+	frappe.qb.update(
+		log_doctype
+	).set(
+		log_doctype.status, updated_status
+	).set(
+		log_doctype.payment_id, payment_id
+	).set(
+		log_doctype.payload, None
+	).where(
+		log_doctype.name == frappe.form_dict.razorpay_payment_link_reference_id
+	).run()
+
+	# currently without explicit commit the log isn't updating
+	frappe.db.commit()
 
 
 def run_on_payment_authorized_method(reference_doctype: str, reference_docname: str):

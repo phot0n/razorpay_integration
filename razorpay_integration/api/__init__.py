@@ -11,10 +11,10 @@ from typing import Callable, Dict
 
 
 '''
-TODO:
+TODO (Plan):
 	- payment links
-	- subscriptions
 	- refunds (partial/full)
+	- subscriptions
 
 NOTE(s):
 1. Any amount passed on to the api should be an int and
@@ -179,7 +179,7 @@ class RazorpayPayment:
 		return self._create_payment_link(api_endpoint=api_endpoint, **kwargs)
 
 
-	def get_payment(self, payment_id: str):
+	def fetch_payment_details(self, payment_id: str):
 		if not payment_id:
 			frappe.throw(
 				frappe._(
@@ -224,7 +224,7 @@ class RazorpayPayment:
 		)
 
 
-	def get_refund(self, refund_id: str):
+	def fetch_refund_details(self, refund_id: str):
 		if not refund_id:
 			frappe.throw(
 				frappe._(

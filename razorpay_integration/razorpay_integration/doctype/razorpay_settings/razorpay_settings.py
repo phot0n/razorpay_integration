@@ -2,14 +2,9 @@
 # For license information, please see license.txt
 
 # frappe imports
-import frappe
 from frappe.integrations.utils import create_payment_gateway
 from frappe.model.document import Document
-from frappe.utils.data import cint, flt
 from frappe.utils.password import get_decrypted_password
-
-# standard imports
-import json
 
 # api imports
 from razorpay_integration.api import RazorpayPayment
@@ -31,5 +26,5 @@ class RazorpaySettings(Document):
 
 
 	def get_payment_url(self, **kwargs):
-		from razorpay_integration.utils import get_payment_url
+		from razorpay_integration import get_payment_url
 		return get_payment_url(self.name, **kwargs)
