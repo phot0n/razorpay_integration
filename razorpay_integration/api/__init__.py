@@ -11,10 +11,10 @@ from typing import Callable, Dict
 
 
 '''
-TODO:
+TODO (Plan):
 	- payment links
-	- subscriptions
 	- refunds (partial/full)
+	- subscriptions
 
 NOTE(s):
 1. Any amount passed on to the api should be an int and
@@ -23,7 +23,7 @@ NOTE(s):
 		20.02 should be passed as 2002,
 		20.00 should be passed as 2000
 
-2. Razorpay's python wrapper doesn't utilize the full potential of
+2. Razorpay's python wrapper doesn't utilize the full potential (and our usecases) of
 	their api hence a custom wrapper
 '''
 
@@ -100,8 +100,6 @@ class RazorpayPayment:
 		description: str="",
 		expire_by: int=0,
 		reference_id: str="",
-		on_success: str="",
-		on_faliure: str="",
 		payer_email: str="",
 		payer_phone: str="",
 		notes: Dict={},
@@ -125,8 +123,6 @@ class RazorpayPayment:
 			frappe.throw(
 				frappe._("Expiry time of Payment link should be atleast 15 mins in the future!!")
 			)
-
-		notes.update({"on_success": on_success, "on_faliure": on_faliure})
 
 		return handle_api_response(
 			partial(
@@ -183,7 +179,7 @@ class RazorpayPayment:
 		return self._create_payment_link(api_endpoint=api_endpoint, **kwargs)
 
 
-	def get_payment(self, payment_id: str):
+	def fetch_payment_details(self, payment_id: str):
 		if not payment_id:
 			frappe.throw(
 				frappe._(
@@ -228,7 +224,7 @@ class RazorpayPayment:
 		)
 
 
-	def get_refund(self, refund_id: str):
+	def fetch_refund_details(self, refund_id: str):
 		if not refund_id:
 			frappe.throw(
 				frappe._(
@@ -255,7 +251,7 @@ def handle_api_response(_func: Callable):
 
 	# to get api's errors
 	if response.get("error"):
-		frappe.log_error(response["error"])
+		frappe.log_error(response["error"], title=frappe._("Razorpay API Error"))
 		frappe.throw(
 			frappe._(
 				response["error"].get("description")

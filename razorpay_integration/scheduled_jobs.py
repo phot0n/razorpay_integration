@@ -54,7 +54,7 @@ def refund_payments() -> None:
 		).run()
 
 
-def update_payment_log_status_in_payment_log_for_expired_links() -> None:
+def update_payment_log_status_for_expired_links() -> None:
 	log_doctype = frappe.qb.DocType("Razorpay Payment Log")
 
 	frappe.qb.update(

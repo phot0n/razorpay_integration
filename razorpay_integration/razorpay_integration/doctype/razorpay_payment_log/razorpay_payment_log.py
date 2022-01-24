@@ -5,18 +5,15 @@ import frappe
 from frappe.model.document import Document
 
 class RazorpayPaymentLog(Document):
-	pass
-
+	def autoname(self):
+		# NOTE: setting a time based hash name so as to avoid collision
+		# b/w reference id's used in payment links - as we're not sure if the ref id's
+		# should be unique across all accounts or just that account (i'm kinda thinking former)
+		self.name = frappe.generate_hash("Razorpay Payment Log", length=40)
 
 
 @frappe.whitelist()
 def update_payment_log_status_to_refund(docname: str) -> None:
-	if not frappe.db.exists({
-		"doctype": "Razorpay Payment Log",
-		"status": "Failed"
-	}):
-		return "No Failed Payments to add to scheduler"
-
 	log = frappe.qb.DocType("Razorpay Payment Log")
 	frappe.qb.update(
 		log
@@ -29,8 +26,13 @@ def update_payment_log_status_to_refund(docname: str) -> None:
 
 @frappe.whitelist()
 def update_failed_payment_log_status_to_refund() -> str:
-	log = frappe.qb.DocType("Razorpay Payment Log")
+	if not frappe.db.exists({
+		"doctype": "Razorpay Payment Log",
+		"status": "Failed"
+	}):
+		return "No Failed Payments to add to scheduler"
 
+	log = frappe.qb.DocType("Razorpay Payment Log")
 	frappe.qb.update(
 		log
 	).set(
@@ -40,4 +42,4 @@ def update_failed_payment_log_status_to_refund() -> str:
 	).run()
 
 	return """Changed Status to Refund.
-		These jobs will be picked up by the hourly scheduler in its next iteration !!"""
+		Jobs will be picked up by the hourly scheduler in its next iteration !!"""
