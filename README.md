@@ -32,7 +32,6 @@ For Razorpay Setting:
 
 2. Checking Enable Auto Refund will add any payment *verification* failure from that razorpay setting to the `refund_payments` scheduled job and will be refunded automatically in the next execution of the job, else if the option is unchecked, the status in the Payment Log will show up as `Failed` and the user can head over to the Payment Log to refund the payment manually and the execution concept will remain the same as with auto refund checked.
 
-
 There is a single payment verification page which verifies if the hash given by razorpay matches the generated hash and updated the Payment Log.
 This page is the default redirect for any generated payment link.
 
@@ -52,6 +51,7 @@ rzp = RazorpayPayment("<api_key>", "<api_secret>")
 ```
 
 ### To generate a payment link:
+
 ```
 rzp.get_or_create_payment_link(amount=1000, payer_name="test")
 ```
@@ -74,21 +74,44 @@ In this method you can pass your amount as float as it will do the conversion au
 
 > NOTE: This function should be used typically for any payment link as it does many things which barebones api wrapper has not been configured to do.
 
+Every Payment Link generated will expire within 15 mins of it's creation which is set as default but can be overidden by passing `expire_by` kwarg to either the api method or the utility function. The value to be passed in this is unix epoch time (INT).
+
 ### To issue refund against a payment id:
+
 ```
 rzp.refund_payment("<payment_id>", <refund_amt>)
 ```
 The refund amount is optional and should be an INT - if the refund amount is not specified then the amount is refunded in full
 
 ### To verify if the creds(key-secret) provided are correct:
+
 ```
 RazorpayPayment.validate_razorpay_creds("<api_key>", "<api_secret>")
 ```
-`validate_razorpay_creds` is a staticmethod hence there is no need to create an object for the RazorpayPayment class
 
-### Cusom Payment Verification Page:
+### To verify if the payment hash is valid:
+
+```
+RazorpayPayment.verify_payment_signature(
+	"<api_secret>",
+	"<razorpay_payment_link_id>",
+	"<razorpay_payment_link_reference_id>",
+	"<razorpay_payment_link_status>",
+	"<razorpay_payment_id>",
+	"<razorpay_signature>"
+)
+```
+These params (except `api_secret`) are provided by razorpay when a payment has been done for verifying the integrity of the signature provided.
+
+> NOTE: `validate_razorpay_creds` and `verify_payment_signature` are staticmethods hence there is no need to create an object for the RazorpayPayment class for them
+
+### Custom Payment Verification Page:
 
 You can also override the default Payment Verification Page by passing a custom url to the `callback_url` kwarg of `get_or_create_payment_link` method. This will redirect users to that custom url instead of the Payment Verification Page thus allowing us to create a custom Payment Verification Page.
+
+#
+
+2 Hourly Scheduled Jobs are present for doing things in the background - Refund Payments and Updation of the Payment Log(s) for Expiry of Links
 
 
 #### License
