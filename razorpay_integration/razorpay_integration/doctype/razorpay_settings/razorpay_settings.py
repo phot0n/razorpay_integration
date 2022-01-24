@@ -27,4 +27,5 @@ class RazorpaySettings(Document):
 
 	def get_payment_url(self, **kwargs):
 		from razorpay_integration import get_payment_url
+		kwargs["api_key"] = self.api_key
 		return get_payment_url(self.name, **kwargs)

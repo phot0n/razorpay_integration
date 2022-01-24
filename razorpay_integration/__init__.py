@@ -58,7 +58,7 @@ def get_payment_url(
 
 	# TODO: figure out a better way to avoid these 2 db calls
 	razorpay_response = RazorpayPayment(
-		frappe.db.get_value("Razorpay Settings", razorpay_setting_name, "api_key"),
+		kwargs.get("api_key", frappe.db.get_value("Razorpay Settings", razorpay_setting_name, "api_key")),
 		get_decrypted_password("Razorpay Settings", razorpay_setting_name, fieldname="api_secret")
 	).get_or_create_payment_link(**kwargs)
 

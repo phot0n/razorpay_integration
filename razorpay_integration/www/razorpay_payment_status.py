@@ -20,9 +20,8 @@ def get_context(context):
 
 		raise frappe.Redirect
 
-	log_doctype = "Razorpay Payment Log"
 	log = frappe.db.get_value(
-		log_doctype,
+		"Razorpay Payment Log",
 		frappe.form_dict.razorpay_payment_link_reference_id,
 		fieldname=[
 			"status", "payload", "razorpay_setting", "reference_doctype", "reference_docname"
