@@ -3,10 +3,9 @@ from frappe.utils.password import get_decrypted_password
 
 import json
 from typing import Dict
-from urllib.parse import urlencode
 
 from razorpay_integration.api import RazorpayPayment
-from razorpay_integration.utils import run_callback
+from razorpay_integration.utils import run_callback, extend_url_query
 
 
 no_cache = 1
@@ -55,7 +54,7 @@ def get_context(context):
 
 	redirect_to = backwards_redirect_to or payload.get("redirect_to", "/")
 	if payload.get("redirect_message"):
-		redirect_to += "&" + urlencode({"redirect_message": payload["redirect_message"]})
+		redirect_to = extend_url_query(redirect_to, {"redirect_message": payload["redirect_message"]})
 
 	update_context(
 		context,
