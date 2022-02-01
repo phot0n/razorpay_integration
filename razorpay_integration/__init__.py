@@ -19,6 +19,18 @@ def get_payment_url(
 	reference_doctype: str,
 	**kwargs
 ):
+	"""
+	Some Acceptable kwargs:
+		payload (dict): attach any key-value pair
+		redirect_to (str): url for where you want to redirect on payment verification
+		on_success (str): string-ed method path for running on successful verification of payment
+		on_faliure (str): stringed method path for running on verification faliure of payment
+		redirect_message (str): redirect message for appending to redirect url
+		payer_email (str): email of payer
+		payer_name (str): name of payer
+		description (str): description of the payment
+	"""
+
 	# NOTE: this is done for local setups otherwise razorpay
 	# throws a valdation error for email
 	kwargs["payer_email"] = kwargs.get("payer_email", frappe.session.user) if (
@@ -32,8 +44,8 @@ def get_payment_url(
 	kwargs["payload"].update(
 		{
 			"redirect_to": kwargs.get("redirect_to", "/"),
-			"on_success_payment": kwargs.get("on_success"),
-			"on_failed_payment": kwargs.get("on_failure"),
+			"on_success": kwargs.get("on_success"),
+			"on_failure": kwargs.get("on_failure"),
 			"redirect_message": kwargs.get("redirect_message")
 		}
 	)
